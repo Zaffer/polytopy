@@ -1,0 +1,26 @@
+{
+  "name": "three-js-webgpu-project",
+  "version": "1.0.0",
+  "description": "A simple 3D visualization project using Three.js and WebGPU.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.175.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.175.0",
+    "vite": "^6.3.2"
+  },
+  "keywords": [
+    "three.js",
+    "webgpu",
+    "3d",
+    "visualization"
+  ],
+  "author": "",
+  "license": "MIT"
+}
