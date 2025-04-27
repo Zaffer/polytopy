@@ -23,7 +23,7 @@ async function main(): Promise<void> {
   const polytopeVisualization = createPolytopeVisualization(sceneManager.getScene());
   sceneManager.addPanel("polytopes", polytopeVisualization);
 
-  sceneManager.drawBoundingBoxes();
+  // sceneManager.drawBoundingBoxes();
 
   sceneManager.startAnimationLoop();
 }
