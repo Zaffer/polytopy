@@ -40,8 +40,16 @@ export class SceneManager {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  public addPanel(name: string, group: THREE.Group, depth: number): void {
-    group.position.z = depth;
+  public addPanel(name: string, group: THREE.Group): void {
+    let currentDepth = 0;
+    if (this.panels.size > 0) {
+      const lastPanel = Array.from(this.panels.values()).at(-1);
+      const boundingBox = new THREE.Box3().setFromObject(lastPanel!);
+      const lastPanelDepth = boundingBox.max.z - boundingBox.min.z;
+      currentDepth = lastPanel!.position.z - lastPanelDepth - 2; // Fixed gap of 4 units
+    }
+
+    group.position.z = currentDepth;
     this.panels.set(name, group);
     this.scene.add(group);
   }
@@ -77,16 +85,11 @@ export class SceneManager {
     return this.camera;
   }
 
-  public adjustPanelDepths(): void {
-    let currentDepth = 0;
+  public drawBoundingBoxes(): void {
     this.panels.forEach((group) => {
       const boundingBox = new THREE.Box3().setFromObject(group);
-      if (boundingBox.isEmpty() || boundingBox.max.z === boundingBox.min.z) {
-        boundingBox.expandByScalar(1); // Increase artificial Z-depth for flat panels
-      }
-      const depth = boundingBox.max.z - boundingBox.min.z;
-      group.position.z = currentDepth - depth / 2;
-      currentDepth -= depth + 2; // Add spacing between panels
+      const helper = new THREE.Box3Helper(boundingBox, 0xff0000);
+      this.scene.add(helper);
     });
   }
 }

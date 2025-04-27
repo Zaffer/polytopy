@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export function createNeuralNetworkVisualization(scene: THREE.Scene, inputData: number[][]): THREE.Group {
+export function createNeuralNetworkVisualization(scene: THREE.Scene, inputData: number[][], depth: number = 3): THREE.Group {
   const group = new THREE.Group();
   const layerSpacing = 2;
   const nodeSpacing = 0.5;
@@ -10,11 +10,9 @@ export function createNeuralNetworkVisualization(scene: THREE.Scene, inputData: 
   const hiddenLayer = Math.ceil(inputLayer / 2);
   const outputLayer = 1;
 
-  const layers = [inputLayer, hiddenLayer, outputLayer];
+  const layers = [inputLayer, ...Array(depth - 2).fill(hiddenLayer), outputLayer];
 
   layers.forEach((nodeCount, layerIndex) => {
-    const nextLayerNodeCount = layers[layerIndex + 1] || 0;
-
     for (let i = 0; i < nodeCount; i++) {
       const geometry = new THREE.SphereGeometry(nodeRadius, 16, 16);
       const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -29,6 +27,7 @@ export function createNeuralNetworkVisualization(scene: THREE.Scene, inputData: 
       group.add(node);
 
       if (layerIndex < layers.length - 1) {
+        const nextLayerNodeCount = layers[layerIndex + 1];
         for (let j = 0; j < nextLayerNodeCount; j++) {
           const startX = 0;
           const startY = i * nodeSpacing - (nodeCount * nodeSpacing) / 2 + nodeSpacing / 2;
