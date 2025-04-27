@@ -6,7 +6,7 @@ export class SceneManager {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
-  private layers: Map<string, THREE.Group>;
+  private panels: Map<string, THREE.Group>;
   private controls: OrbitControls;
 
   constructor() {
@@ -29,7 +29,7 @@ export class SceneManager {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true; // Smooth rotation
 
-    this.layers = new Map();
+    this.panels = new Map();
 
     window.addEventListener("resize", this.onWindowResize.bind(this));
   }
@@ -40,22 +40,22 @@ export class SceneManager {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  public addLayer(name: string, group: THREE.Group, depth: number): void {
+  public addPanel(name: string, group: THREE.Group, depth: number): void {
     group.position.z = depth;
-    this.layers.set(name, group);
+    this.panels.set(name, group);
     this.scene.add(group);
   }
 
-  public removeLayer(name: string): void {
-    const group = this.layers.get(name);
+  public removePanel(name: string): void {
+    const group = this.panels.get(name);
     if (group) {
       this.scene.remove(group);
-      this.layers.delete(name);
+      this.panels.delete(name);
     }
   }
 
-  public toggleLayerVisibility(name: string, visible: boolean): void {
-    const group = this.layers.get(name);
+  public togglePanelVisibility(name: string, visible: boolean): void {
+    const group = this.panels.get(name);
     if (group) {
       group.visible = visible;
     }

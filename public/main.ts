@@ -1,13 +1,13 @@
 import { SceneManager } from "./core/sceneSetup";
-import { createMatrixVisualization, generateBinaryMatrix } from "./visualizations/matrixVisualization";
+import { createDataVisualization, generateBinaryData } from "./visualizations/dataVisualization";
 
 async function main(): Promise<void> {
   const sceneManager = new SceneManager();
 
-  const binaryMatrix = generateBinaryMatrix(10,  10);
+  const binaryData = generateBinaryData(10,  10);
 
-  const matrixVisualization = createMatrixVisualization(sceneManager.getScene(), binaryMatrix);
-  sceneManager.addLayer("matrix", matrixVisualization, 0);
+  const panelVisualization = createDataVisualization(sceneManager.getScene(), binaryData);
+  sceneManager.addPanel("trainingData", panelVisualization, 0);
 
   sceneManager.startAnimationLoop();
 }
