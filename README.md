@@ -1,23 +1,21 @@
 # POLYTOPY
 
-Are neural networks are just polytopes?
+Inspired by: https://addxorrol.blogspot.com/2024/07/some-experiments-to-help-me-understand.html?m=1
 
-## Getting Started
-
-To get started with this project, follow these steps:
+## Setup
 
 1. **Install dependencies:**
    ```
    npm install
    ```
 
-1. **Run the development server:**
+1. **Run server:**
    ```
-   npm run dev
+   npm start
    ```
 
-1. **Open your browser:**
-   Navigate to `http://localhost:3000` (or the port specified in your Vite configuration) to view the application.
+1. **Open browser:**
+   Navigate to `http://localhost:3000` (or the port specified in your Vite configuration).
 
 ## Usage
 
