@@ -1,10 +1,18 @@
 {
-    "compilerOptions": {
-      // other options...
-      "baseUrl": ".",
-      "paths": {
-        "three/webgpu": ["node_modules/three/build/three.webgpu.js"],
-        "three/tsl": ["node_modules/three/build/three.tsl.js"],
-      },
-    }
-  }
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "three/webgpu": ["node_modules/three/build/three.webgpu.js"],
+      "three/tsl": ["node_modules/three/build/three.tsl.js"]
+    },
+    "strict": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["public/**/*"],
+  "exclude": ["node_modules"]
+}
