@@ -76,4 +76,17 @@ export class SceneManager {
   public getCamera(): THREE.PerspectiveCamera {
     return this.camera;
   }
+
+  public adjustPanelDepths(): void {
+    let currentDepth = 0;
+    this.panels.forEach((group) => {
+      const boundingBox = new THREE.Box3().setFromObject(group);
+      if (boundingBox.isEmpty() || boundingBox.max.z === boundingBox.min.z) {
+        boundingBox.expandByScalar(1); // Increase artificial Z-depth for flat panels
+      }
+      const depth = boundingBox.max.z - boundingBox.min.z;
+      group.position.z = currentDepth - depth / 2;
+      currentDepth -= depth + 2; // Add spacing between panels
+    });
+  }
 }
