@@ -20,6 +20,9 @@ export class NeuralNetworkTrainerUI {
   private updateInterval: number = 10;
   private trainingTask: number | null = null;
   private currentEpoch: number = 0;
+  private windowSize: number = 3; // 3x3 window for input
+  private inputSize: number;
+  private outputSize: number = 1;
   
   // UI callbacks
   private onTrainingStatusChange: (status: string) => void = () => {};
@@ -29,6 +32,7 @@ export class NeuralNetworkTrainerUI {
   constructor(sceneManager: SceneManager) {
     this.sceneManager = sceneManager;
     this.binaryData = generateBinaryData(10, 10);
+    this.inputSize = this.windowSize * this.windowSize; // 3x3 window
     this.nn = this.createNeuralNetwork();
     this.initVisualizations();
   }
@@ -39,11 +43,15 @@ export class NeuralNetworkTrainerUI {
     this.sceneManager.addPanel("trainingData", dataVisualization);
     this.panels.trainingData = { group: dataVisualization, visible: true };
 
-    // Create a neural network visualization
+    // Create a neural network visualization with accurate structure
     const neuralNetworkVisualization = createNeuralNetworkVisualization(
       this.sceneManager.getScene(), 
       this.binaryData, 
-      5
+      {
+        inputSize: this.inputSize,
+        hiddenSize: this.hiddenLayerSize,
+        outputSize: this.outputSize
+      }
     );
     this.sceneManager.addPanel("neuralNetwork", neuralNetworkVisualization);
     this.panels.neuralNetwork = { group: neuralNetworkVisualization, visible: true };
@@ -107,6 +115,9 @@ export class NeuralNetworkTrainerUI {
     this.onEpochChange(0);
     this.onAccuracyChange(0);
     
+    // Update the neural network visualization to reflect the new structure
+    this.updateNeuralNetworkVisualization();
+    
     // Reset predictions visualization
     const resetPredictions = this.binaryData.map(row => row.map(() => Math.random() * 5));
     const newPredVis = createPredictionVisualization(this.sceneManager.getScene(), resetPredictions);
@@ -166,7 +177,24 @@ export class NeuralNetworkTrainerUI {
     // Recreate the network with new hidden layer size
     if (!this.trainingInProgress) {
       this.nn = this.createNeuralNetwork();
+      // Update the neural network visualization to reflect the new structure
+      this.updateNeuralNetworkVisualization();
     }
+  }
+
+  // Update the neural network visualization
+  private updateNeuralNetworkVisualization(): void {
+    const neuralNetworkVisualization = createNeuralNetworkVisualization(
+      this.sceneManager.getScene(), 
+      this.binaryData, 
+      {
+        inputSize: this.inputSize,
+        hiddenSize: this.hiddenLayerSize,
+        outputSize: this.outputSize
+      }
+    );
+    this.sceneManager.updatePanel("neuralNetwork", neuralNetworkVisualization);
+    this.panels.neuralNetwork.group = neuralNetworkVisualization;
   }
 
   // Update update interval
@@ -176,10 +204,7 @@ export class NeuralNetworkTrainerUI {
 
   // Create neural network with current parameters
   private createNeuralNetwork(): SimpleNeuralNetwork {
-    const windowSize = 3; // 3x3 window
-    const inputSize = windowSize * windowSize;
-    const outputSize = 1; // Single output for simplicity
-    return new SimpleNeuralNetwork(inputSize, this.hiddenLayerSize, outputSize, this.learningRate);
+    return new SimpleNeuralNetwork(this.inputSize, this.hiddenLayerSize, this.outputSize, this.learningRate);
   }
 
   // Private method that handles the actual training loop
