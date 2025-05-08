@@ -54,6 +54,11 @@ export class SceneManager {
     this.scene.add(group);
   }
 
+  public updatePanel(name: string, newGroup: THREE.Group): void {
+    this.removePanel(name);
+    this.addPanel(name, newGroup);
+  }
+
   public removePanel(name: string): void {
     const group = this.panels.get(name);
     if (group) {
