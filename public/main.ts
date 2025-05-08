@@ -9,8 +9,8 @@ async function main(): Promise<void> {
 
   const binaryData = generateBinaryData(10,  10);
 
-  const panelVisualization = createDataVisualization(sceneManager.getScene(), binaryData);
-  sceneManager.addPanel("trainingData", panelVisualization);
+  const dataVisualization = createDataVisualization(sceneManager.getScene(), binaryData);
+  sceneManager.addPanel("trainingData", dataVisualization);
 
   const neuralNetworkVisualization = createNeuralNetworkVisualization(sceneManager.getScene(), binaryData, 5);
   sceneManager.addPanel("neuralNetwork", neuralNetworkVisualization);
