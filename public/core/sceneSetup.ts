@@ -55,8 +55,21 @@ export class SceneManager {
   }
 
   public updatePanel(name: string, newGroup: THREE.Group): void {
-    this.removePanel(name);
-    this.addPanel(name, newGroup);
+    const oldGroup = this.panels.get(name);
+    if (oldGroup) {
+      // Preserve the original position of the panel
+      newGroup.position.copy(oldGroup.position);
+      
+      // Remove the old panel and add the new one
+      this.scene.remove(oldGroup);
+      this.scene.add(newGroup);
+      
+      // Update the panels map
+      this.panels.set(name, newGroup);
+    } else {
+      // If panel doesn't exist, create a new one
+      this.addPanel(name, newGroup);
+    }
   }
 
   public removePanel(name: string): void {

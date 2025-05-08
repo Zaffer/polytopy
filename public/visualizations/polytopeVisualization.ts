@@ -71,6 +71,35 @@ export function createPolytopeVisualization(scene: THREE.Scene): THREE.Group {
   const boundaryLines = new THREE.LineSegments(boundaryGeometry, boundaryMaterial);
   group.add(boundaryLines);
 
-  scene.add(group);
+  // Add a title to the polytope panel
+  const titleCanvas = document.createElement('canvas');
+  titleCanvas.width = 512;
+  titleCanvas.height = 128;
+  const ctx = titleCanvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Polytope Visualization', 256, 64);
+    
+    const texture = new THREE.CanvasTexture(titleCanvas);
+    const titleMaterial = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const titlePlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(6, 1.5),
+      titleMaterial
+    );
+    
+    // Position the title above the polytope visualization
+    titlePlane.position.y = gridRange + 1.5;
+    
+    group.add(titlePlane);
+  }
+
+  // Removed scene.add(group) to prevent duplication
   return group;
 }
