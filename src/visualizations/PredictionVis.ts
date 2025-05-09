@@ -1,7 +1,14 @@
 import * as THREE from "three";
 
-export function createPredictionVisualization(scene: THREE.Scene, predictions: number[][]): THREE.Group {
+export function createPredictionVisualization(predictions: number[][]): THREE.Group {
   const group = new THREE.Group();
+  
+  // Handle undefined or empty predictions data
+  if (!predictions || predictions.length === 0) {
+    console.warn("Empty or undefined predictions provided to createPredictionVisualization");
+    return group; // Return empty group
+  }
+  
   const cellSize = 0.5;
   const spacing = 0.1;
 
@@ -113,6 +120,5 @@ export function createPredictionVisualization(scene: THREE.Scene, predictions: n
     group.add(titlePlane);
   }
 
-  // Removed: scene.add(group);
   return group;
 }

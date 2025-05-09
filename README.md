@@ -33,34 +33,3 @@ If you would like to contribute to this project, please fork the repository and 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
-
-## Project Structure
-
-```
-/
-├── src/
-│   ├── components/           # UI components
-│   │   ├── controls/
-│   │   │   ├── ControlPanel.ts
-│   │   │   └── ControlElements.ts
-│   ├── core/                 # Core application code
-│   │   ├── Controller.ts     # Neural network training controller
-│   │   └── SceneManager.ts   # 3D scene management
-│   ├── models/               # Data models
-│   │   ├── NeuralNetworkTrainer.ts
-│   │   └── DataGenerator.ts
-│   ├── visualizations/       # Visualization panels
-│   │   ├── DataVis.ts
-│   │   ├── NetworkVis.ts
-│   │   ├── PredictionVis.ts
-│   │   └── PolytopeVis.ts
-│   ├── utils/
-│   │   └── math.ts
-│   └── main.ts               # Entry point
-├── index.html
-├── package.json
-├── tsconfig.json
-├── vite.config.js
-├── README.md
-└── LICENSE
-```

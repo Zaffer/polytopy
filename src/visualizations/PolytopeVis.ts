@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export function createPolytopeVisualization(scene: THREE.Scene): THREE.Group {
+export function createPolytopeVisualization(): THREE.Group {
   const group = new THREE.Group();
 
   // Parameters for the 2D grid
@@ -100,6 +100,5 @@ export function createPolytopeVisualization(scene: THREE.Scene): THREE.Group {
     group.add(titlePlane);
   }
 
-  // Removed scene.add(group) to prevent duplication
   return group;
 }

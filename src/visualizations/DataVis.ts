@@ -6,8 +6,15 @@ export function generateBinaryData(rows: number, cols: number): number[][] {
   );
 }
 
-export function createDataVisualization(scene: THREE.Scene, data: number[][]): THREE.Group {
+export function createDataVisualization(data: number[][]): THREE.Group {
   const group = new THREE.Group();
+  
+  // Handle undefined or empty data
+  if (!data || data.length === 0) {
+    console.warn("Empty or undefined data provided to createDataVisualization");
+    return group; // Return empty group
+  }
+  
   const cellSize = 0.5;
   const spacing = 0.1;
   const zeroMaterial = new THREE.MeshBasicMaterial({ color: 0x3498db, side: THREE.DoubleSide });
@@ -53,6 +60,5 @@ export function createDataVisualization(scene: THREE.Scene, data: number[][]): T
     group.add(titlePlane);
   }
 
-  // Removing the scene.add(group) to prevent duplicate groups
   return group;
 }

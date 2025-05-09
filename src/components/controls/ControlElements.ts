@@ -117,6 +117,67 @@ export function addCheckbox(
   return checkbox;
 }
 
+// Add a group of radio buttons
+export function addRadioGroup(
+  panel: HTMLElement,
+  label: string,
+  options: Array<{ id: string, label: string, checked?: boolean }>,
+  onChange: (selectedId: string) => void
+): { radioGroup: HTMLElement, radioButtons: HTMLInputElement[] } {
+  const container = document.createElement('div');
+  container.style.margin = '10px 0';
+  
+  const labelElement = document.createElement('label');
+  labelElement.textContent = label;
+  labelElement.style.display = 'block';
+  labelElement.style.marginBottom = '5px';
+  container.appendChild(labelElement);
+  
+  const radioGroup = document.createElement('div');
+  radioGroup.style.display = 'flex';
+  radioGroup.style.flexDirection = 'column';
+  radioGroup.style.gap = '5px';
+  
+  const radioButtons: HTMLInputElement[] = [];
+  
+  // Create a unique group name for this set of radio buttons
+  const groupName = `radio-group-${Math.random().toString(36).substring(2, 9)}`;
+  
+  options.forEach(option => {
+    const radioContainer = document.createElement('div');
+    radioContainer.style.display = 'flex';
+    radioContainer.style.alignItems = 'center';
+    
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.id = option.id;
+    radio.name = groupName;
+    radio.checked = option.checked || false;
+    radio.style.marginRight = '5px';
+    
+    const radioLabel = document.createElement('label');
+    radioLabel.htmlFor = option.id;
+    radioLabel.textContent = option.label;
+    
+    radio.addEventListener('change', () => {
+      if (radio.checked) {
+        onChange(option.id);
+      }
+    });
+    
+    radioContainer.appendChild(radio);
+    radioContainer.appendChild(radioLabel);
+    radioGroup.appendChild(radioContainer);
+    
+    radioButtons.push(radio);
+  });
+  
+  container.appendChild(radioGroup);
+  panel.appendChild(container);
+  
+  return { radioGroup, radioButtons };
+}
+
 // Add a separator line
 export function addSeparator(panel: HTMLElement): void {
   const separator = document.createElement('hr');
@@ -129,6 +190,7 @@ export function addSeparator(panel: HTMLElement): void {
 // Add a text display that can be updated
 export function addTextDisplay(panel: HTMLElement, label: string): { 
   container: HTMLElement, 
+  valueElement: HTMLElement, 
   update: (text: string) => void 
 } {
   const container = document.createElement('div');
@@ -146,6 +208,7 @@ export function addTextDisplay(panel: HTMLElement, label: string): {
   
   return {
     container,
+    valueElement,
     update: (text: string) => {
       valueElement.textContent = text;
     }

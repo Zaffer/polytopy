@@ -1,4 +1,5 @@
-import { NeuralNetworkTrainerUI } from "../../core/Controller";
+import { SceneManager } from "../../core/SceneManager";
+import { UIManager } from "./UIManager";
 import {
   createControlsPanel,
   addButton,
@@ -8,85 +9,111 @@ import {
   addTextDisplay
 } from "./ControlElements";
 
-export function setupControls(trainerUI: NeuralNetworkTrainerUI): HTMLElement {
+export function setupControls(sceneManager: SceneManager): HTMLElement {
   // Create UI controls
   const controlsPanel = createControlsPanel();
   
+  // Create UI manager to handle reactive updates
+  const uiManager = new UIManager(sceneManager);
+  
   // Training status display
-  const trainingStatus = addTextDisplay(controlsPanel, "Training Status");
-  trainingStatus.update("Not Started");
-  
+  const trainingStatusDisplay = addTextDisplay(controlsPanel, "Training Status");
   const epochDisplay = addTextDisplay(controlsPanel, "Current Epoch");
-  epochDisplay.update("0");
-  
   const accuracyDisplay = addTextDisplay(controlsPanel, "Current Accuracy");
-  accuracyDisplay.update("0%");
   
-  // Register callbacks for UI updates
-  trainerUI.registerCallbacks(
-    (status) => trainingStatus.update(status),
-    (epoch) => epochDisplay.update(epoch.toString()),
-    (accuracy) => accuracyDisplay.update(`${(accuracy * 100).toFixed(1)}%`)
+  // Register status elements with the UI manager
+  uiManager.registerStatusElements(
+    trainingStatusDisplay.valueElement,
+    epochDisplay.valueElement,
+    accuracyDisplay.valueElement
   );
   
   addSeparator(controlsPanel);
   
   // Training controls
   addButton(controlsPanel, "Start Training", () => {
-    trainerUI.startTraining();
+    uiManager.onStartTraining();
   });
   
   addButton(controlsPanel, "Stop Training", () => {
-    trainerUI.stopTraining();
+    uiManager.onStopTraining();
   });
   
   addButton(controlsPanel, "Reset Network", () => {
-    trainerUI.resetNetwork();
+    uiManager.onResetNetwork();
   });
   
   addSeparator(controlsPanel);
   
   // Add parameter sliders
-  addSlider(controlsPanel, "Learning Rate", 0.001, 0.1, 0.05, 0.001, (value) => {
-    trainerUI.setLearningRate(value);
+  const learningRateSlider = addSlider(controlsPanel, "Learning Rate", 0.001, 0.1, 0.05, 0.001, (value) => {
+    uiManager.onLearningRateChange(value);
   });
   
-  addSlider(controlsPanel, "Epochs", 10, 500, 100, 10, (value) => {
-    trainerUI.setEpochs(value);
+  const epochsSlider = addSlider(controlsPanel, "Epochs", 10, 500, 100, 10, (value) => {
+    uiManager.onEpochsChange(value);
   });
   
-  addSlider(controlsPanel, "Hidden Layer Size", 2, 20, 8, 1, (value) => {
-    trainerUI.setHiddenLayerSize(value);
+  const hiddenLayerSizeSlider = addSlider(controlsPanel, "Hidden Layer Size", 2, 20, 8, 1, (value) => {
+    uiManager.onHiddenLayerSizeChange(value);
   });
   
-  addSlider(controlsPanel, "Update Interval", 1, 50, 10, 1, (value) => {
-    trainerUI.setUpdateInterval(value);
+  const updateIntervalSlider = addSlider(controlsPanel, "Update Interval", 1, 50, 10, 1, (value) => {
+    uiManager.onUpdateIntervalChange(value);
   });
+  
+  // Register sliders with the UI manager
+  uiManager.registerSliders(
+    learningRateSlider,
+    epochsSlider,
+    hiddenLayerSizeSlider,
+    updateIntervalSlider
+  );
   
   addSeparator(controlsPanel);
   
   // Data and visualization controls
   addButton(controlsPanel, "Regenerate Data", () => {
-    trainerUI.regenerateData();
+    uiManager.onRegenerateData();
   });
   
   addSeparator(controlsPanel);
   
   // Panel visibility checkboxes
-  addCheckbox(controlsPanel, "Show Training Data", true, (checked) => {
-    trainerUI.togglePanelVisibility("trainingData", checked);
+  const trainingDataCheckbox = addCheckbox(controlsPanel, "Show Training Data", true, (checked) => {
+    uiManager.onPanelVisibilityChange("trainingData", checked);
   });
   
-  addCheckbox(controlsPanel, "Show Neural Network", true, (checked) => {
-    trainerUI.togglePanelVisibility("neuralNetwork", checked);
+  const neuralNetworkCheckbox = addCheckbox(controlsPanel, "Show Neural Network", true, (checked) => {
+    uiManager.onPanelVisibilityChange("neuralNetwork", checked);
   });
   
-  addCheckbox(controlsPanel, "Show Predictions", true, (checked) => {
-    trainerUI.togglePanelVisibility("predictions", checked);
+  const predictionsCheckbox = addCheckbox(controlsPanel, "Show Predictions", true, (checked) => {
+    uiManager.onPanelVisibilityChange("predictions", checked);
   });
   
-  addCheckbox(controlsPanel, "Show Polytopes", true, (checked) => {
-    trainerUI.togglePanelVisibility("polytopes", checked);
+  const polytopesCheckbox = addCheckbox(controlsPanel, "Show Polytopes", true, (checked) => {
+    uiManager.onPanelVisibilityChange("polytopes", checked);
+  });
+  
+  // Register visibility checkboxes with the UI manager
+  uiManager.registerVisibilityCheckboxes(
+    trainingDataCheckbox,
+    neuralNetworkCheckbox,
+    predictionsCheckbox,
+    polytopesCheckbox
+  );
+  
+  addSeparator(controlsPanel);
+  
+  // Camera reset button
+  addButton(controlsPanel, "Reset Camera", () => {
+    uiManager.onResetCamera();
+  });
+  
+  // Add cleanup handler for window unload
+  window.addEventListener('beforeunload', () => {
+    uiManager.dispose();
   });
   
   return controlsPanel;
