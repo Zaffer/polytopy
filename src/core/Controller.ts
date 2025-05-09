@@ -1,10 +1,10 @@
 import * as THREE from "three";
-import { SceneManager } from "../core/sceneSetup";
-import { SimpleNeuralNetwork } from "../logic/neuralNetworkTrainer";
-import { createDataVisualization, generateBinaryData } from "./dataVisualization";
-import { createNeuralNetworkVisualization } from "./neuralNetworkVisualization";
-import { createPredictionVisualization } from "./predictionVisualization";
-import { createPolytopeVisualization } from "./polytopeVisualization";
+import { SceneManager } from "./SceneManager";
+import { SimpleNeuralNetwork } from "../models/NeuralNetworkTrainer";
+import { createDataVisualization, generateBinaryData } from "../visualizations/DataVis";
+import { createNeuralNetworkVisualization } from "../visualizations/NetworkVis";
+import { createPredictionVisualization } from "../visualizations/PredictionVis";
+import { createPolytopeVisualization } from "../visualizations/PolytopeVis";
 
 export class NeuralNetworkTrainerUI {
   private sceneManager: SceneManager;

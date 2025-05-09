@@ -19,7 +19,12 @@ Inspired by: https://addxorrol.blogspot.com/2024/07/some-experiments-to-help-me-
 
 ## Usage
 
-The application initializes a WebGPU context and creates a 3D scene.
+The application initializes a 3D scene with machine learning visualizations using THREE.js. It includes:
+
+- Data visualization panel
+- Neural network structure visualization
+- Prediction visualization
+- Polytope visualization
 
 ## Contributing
 
@@ -28,3 +33,34 @@ If you would like to contribute to this project, please fork the repository and 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
+
+## Project Structure
+
+```
+/
+├── src/
+│   ├── components/           # UI components
+│   │   ├── controls/
+│   │   │   ├── ControlPanel.ts
+│   │   │   └── ControlElements.ts
+│   ├── core/                 # Core application code
+│   │   ├── Controller.ts     # Neural network training controller
+│   │   └── SceneManager.ts   # 3D scene management
+│   ├── models/               # Data models
+│   │   ├── NeuralNetworkTrainer.ts
+│   │   └── DataGenerator.ts
+│   ├── visualizations/       # Visualization panels
+│   │   ├── DataVis.ts
+│   │   ├── NetworkVis.ts
+│   │   ├── PredictionVis.ts
+│   │   └── PolytopeVis.ts
+│   ├── utils/
+│   │   └── math.ts
+│   └── main.ts               # Entry point
+├── index.html
+├── package.json
+├── tsconfig.json
+├── vite.config.js
+├── README.md
+└── LICENSE
+```

@@ -1,6 +1,6 @@
-import { SceneManager } from "./core/sceneSetup";
-import { NeuralNetworkTrainerUI } from "./visualizations/neuralNetworkTrainerUI";
-import { setupControls } from "./visualizations/controlsSetup";
+import { SceneManager } from "./core/SceneManager";
+import { NeuralNetworkTrainerUI } from "./core/Controller";
+import { setupControls } from "./components/controls";
 
 async function main(): Promise<void> {
   // Initialize the scene manager

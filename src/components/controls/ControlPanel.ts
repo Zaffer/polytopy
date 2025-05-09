@@ -1,4 +1,4 @@
-import { NeuralNetworkTrainerUI } from "./neuralNetworkTrainerUI";
+import { NeuralNetworkTrainerUI } from "../../core/Controller";
 import {
   createControlsPanel,
   addButton,
@@ -6,7 +6,7 @@ import {
   addCheckbox,
   addSeparator,
   addTextDisplay
-} from "./uiControls";
+} from "./ControlElements";
 
 export function setupControls(trainerUI: NeuralNetworkTrainerUI): HTMLElement {
   // Create UI controls
