@@ -1,4 +1,4 @@
-import { SceneManager } from "../../core/SceneManager";
+import { AppController } from "../../core/AppController";
 import { UIManager } from "./UIManager";
 import {
   createControlsPanel,
@@ -9,12 +9,12 @@ import {
   addTextDisplay
 } from "./ControlElements";
 
-export function setupControls(sceneManager: SceneManager): HTMLElement {
+export function setupControls(appController: AppController): HTMLElement {
   // Create UI controls
   const controlsPanel = createControlsPanel();
   
   // Create UI manager to handle reactive updates
-  const uiManager = new UIManager(sceneManager);
+  const uiManager = new UIManager(appController);
   
   // Training status display
   const trainingStatusDisplay = addTextDisplay(controlsPanel, "Training Status");

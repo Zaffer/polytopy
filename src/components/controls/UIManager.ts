@@ -1,6 +1,7 @@
 import { Subscription } from "rxjs";
 import { AppState } from "../../utils/AppState";
-import { SceneManager } from "../../core/SceneManager";
+import { AppController } from "../../core/AppController";
+import { PanelType } from "../../types/scene";
 
 /**
  * UIManager class to handle reactive UI updates and user interactions
@@ -24,7 +25,7 @@ export class UIManager {
     polytopesCheckbox?: HTMLInputElement;
   } = {};
   
-  constructor(private sceneManager: SceneManager) {
+  constructor(private appController: AppController) {
     this.appState = AppState.getInstance();
     
     // Set up state subscriptions when the UI manager is created
@@ -188,45 +189,48 @@ export class UIManager {
   // Action handlers
   
   public onStartTraining(): void {
-    this.sceneManager.startTraining();
+    this.appController.startTraining();
   }
   
   public onStopTraining(): void {
-    this.sceneManager.stopTraining();
+    this.appController.stopTraining();
   }
   
   public onResetNetwork(): void {
-    this.sceneManager.resetNetwork();
+    this.appController.resetNetwork();
   }
   
   public onRegenerateData(): void {
-    this.sceneManager.regenerateData();
+    const config = this.appController.getDataManager().getCurrentData();
+    const width = config[0].length;
+    const height = config.length;
+    this.appController.regenerateData(width, height);
   }
   
   public onLearningRateChange(value: number): void {
-    this.sceneManager.setLearningRate(value);
+    this.appController.setLearningRate(value);
   }
   
   public onEpochsChange(value: number): void {
-    this.sceneManager.setEpochs(value);
+    this.appController.setEpochs(value);
   }
   
   public onHiddenLayerSizeChange(value: number): void {
-    this.sceneManager.setHiddenLayerSize(value);
+    this.appController.setHiddenLayerSize(value);
   }
   
   public onUpdateIntervalChange(value: number): void {
-    this.sceneManager.setUpdateInterval(value);
+    this.appController.setUpdateInterval(value);
   }
   
   public onPanelVisibilityChange(panelName: string, visible: boolean): void {
-    this.sceneManager.setVisualizationOption(panelName, visible);
+    this.appController.setVisualizationOption(panelName as PanelType, visible);
   }
   
   /**
    * Reset camera to default position
    */
   public onResetCamera(): void {
-    this.sceneManager.resetCamera();
+    this.appController.resetCamera();
   }
 }

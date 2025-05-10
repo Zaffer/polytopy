@@ -1,7 +1,7 @@
-import * as THREE from "three";
 import { Observable, Subscription } from "rxjs";
 
 import { SceneManager } from "../core/SceneManager";
+import { PanelType } from "../types/scene";
 import { AppState } from "../utils/AppState";
 import { createDataVisualization } from "./DataVis";
 import { createNeuralNetworkVisualization } from "./NetworkVis";
@@ -37,7 +37,7 @@ export class VisualizationManager {
     this.subscriptions.push(
       data$.subscribe(data => {
         const visualization = createDataVisualization(data);
-        this.sceneManager.updatePanel("trainingData", visualization);
+        this.sceneManager.updatePanel(PanelType.TRAINING_DATA, visualization);
       })
     );
   }
@@ -48,16 +48,12 @@ export class VisualizationManager {
   public updateNetworkVisualization(): void {
     this.subscriptions.push(
       this.appState.networkConfig.subscribe(config => {
-        const visualization = createNeuralNetworkVisualization(
-          this.sceneManager.getScene(),
-          [],  // This is the inputData parameter, which seems to be unused in the current implementation
-          {
-            inputSize: config.inputSize,
-            hiddenSize: config.hiddenSize,
-            outputSize: config.outputSize
-          }
-        );
-        this.sceneManager.updatePanel("neuralNetwork", visualization);
+        const visualization = createNeuralNetworkVisualization({
+          inputSize: config.inputSize,
+          hiddenSize: config.hiddenSize,
+          outputSize: config.outputSize
+        });
+        this.sceneManager.updatePanel(PanelType.NEURAL_NETWORK, visualization);
       })
     );
   }
@@ -71,7 +67,7 @@ export class VisualizationManager {
         if (predictions.length === 0) return;
         
         const visualization = createPredictionVisualization(predictions);
-        this.sceneManager.updatePanel("predictions", visualization);
+        this.sceneManager.updatePanel(PanelType.PREDICTIONS, visualization);
       })
     );
   }
@@ -81,6 +77,6 @@ export class VisualizationManager {
    */
   public updatePolytopeVisualization(): void {
     const visualization = createPolytopeVisualization();
-    this.sceneManager.updatePanel("polytopes", visualization);
+    this.sceneManager.updatePanel(PanelType.POLYTOPES, visualization);
   }
 }

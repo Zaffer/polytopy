@@ -1,9 +1,10 @@
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { AppState } from '../utils/AppState';
-import { DataManager, TrainingSample } from './DataGenerator';
+import { DataManager } from './DataGenerator';
 import { SimpleNeuralNetwork } from './NeuralNetworkTrainer';
+import { TrainingSample } from '../types/model';
 
 /**
  * Class responsible for managing neural network training

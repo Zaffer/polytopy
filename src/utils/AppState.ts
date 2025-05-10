@@ -1,35 +1,13 @@
 import { BehaviorSubject } from 'rxjs';
 import { SimpleNeuralNetwork } from '../models/NeuralNetworkTrainer';
-
-/**
- * Interface for neural network configuration
- */
-export interface NetworkConfig {
-  inputSize: number;
-  hiddenSize: number;
-  outputSize: number;
-  learningRate: number;
-}
-
-/**
- * Interface for training configuration
- */
-export interface TrainingConfig {
-  epochs: number;
-  currentEpoch: number;
-  updateInterval: number;
-  isTraining: boolean;
-}
-
-/**
- * Interface for visualization options
- */
-export interface VisualizationOptions {
-  showTrainingData: boolean;
-  showNeuralNetwork: boolean;
-  showPredictions: boolean;
-  showPolytopes: boolean;
-}
+import { 
+  NetworkConfig, 
+  TrainingConfig, 
+  VisualizationOptions,
+  DEFAULT_NETWORK_CONFIG,
+  DEFAULT_TRAINING_CONFIG,
+  DEFAULT_VISUALIZATION_OPTIONS
+} from '../types/model';
 
 /**
  * Central state management for the application using RxJS
@@ -38,27 +16,9 @@ export class AppState {
   private static instance: AppState;
   
   // State subjects
-  public networkConfig = new BehaviorSubject<NetworkConfig>({
-    inputSize: 9, // 3x3 window
-    hiddenSize: 8,
-    outputSize: 1,
-    learningRate: 0.05,
-  });
-  
-  public trainingConfig = new BehaviorSubject<TrainingConfig>({
-    epochs: 100,
-    currentEpoch: 0,
-    updateInterval: 10,
-    isTraining: false,
-  });
-  
-  public visualizationOptions = new BehaviorSubject<VisualizationOptions>({
-    showTrainingData: true,
-    showNeuralNetwork: true,
-    showPredictions: true,
-    showPolytopes: true,
-  });
-  
+  public networkConfig = new BehaviorSubject<NetworkConfig>(DEFAULT_NETWORK_CONFIG);
+  public trainingConfig = new BehaviorSubject<TrainingConfig>(DEFAULT_TRAINING_CONFIG);
+  public visualizationOptions = new BehaviorSubject<VisualizationOptions>(DEFAULT_VISUALIZATION_OPTIONS);
   public accuracy = new BehaviorSubject<number>(0);
   public status = new BehaviorSubject<string>('Ready');
 

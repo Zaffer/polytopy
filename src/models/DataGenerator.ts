@@ -1,15 +1,6 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-
-/**
- * The type of training data for a specific cell
- */
-export interface TrainingSample {
-  input: number[];
-  target: number[];
-  row: number;
-  col: number;
-}
+import { TrainingSample } from '../types/model';
 
 /**
  * Class for generating and managing training data

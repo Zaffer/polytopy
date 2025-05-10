@@ -1,14 +1,7 @@
 import * as THREE from "three";
-
-interface NeuralNetworkStructure {
-  inputSize: number;
-  hiddenSize: number;
-  outputSize: number;
-}
+import { NeuralNetworkStructure } from "../types/model";
 
 export function createNeuralNetworkVisualization(
-  scene: THREE.Scene, 
-  inputData: number[][], 
   networkStructure: NeuralNetworkStructure
 ): THREE.Group {
   const group = new THREE.Group();

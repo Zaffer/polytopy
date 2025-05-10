@@ -1,3 +1,5 @@
+import { ControlElement, SliderOptions } from '../../types/ui';
+
 // Create a simple UI panel for controls
 export function createControlsPanel(): HTMLElement {
   const panel = document.createElement('div');
