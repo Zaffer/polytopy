@@ -1,6 +1,95 @@
 import * as THREE from "three";
 import { NeuralNetworkStructure } from "../types/model";
 
+/**
+ * Helper function to create text labels as sprites with sharp text
+ */
+function createTextSprite(text: string, fontSize: number = 16, backgroundColor: string = "rgba(0, 0, 0, 0)"): THREE.Sprite {
+  // Create high-resolution canvas for text rendering
+  const canvas = document.createElement('canvas');
+  const pixelRatio = window.devicePixelRatio || 2; // Use device pixel ratio or fallback to 2x
+  const size = fontSize * 3; // Increase base size
+  canvas.width = size * 5 * pixelRatio;  // Make canvas extra wide for text and apply pixel ratio
+  canvas.height = size * 1.5 * pixelRatio;
+  const ctx = canvas.getContext('2d');
+  
+  if (!ctx) {
+    console.error("Failed to get canvas context");
+    // Return empty sprite if context creation fails
+    return new THREE.Sprite();
+  }
+  
+  // Scale the context by pixel ratio for high DPI displays
+  ctx.scale(pixelRatio, pixelRatio);
+  
+  // Optional background for certain labels
+  if (backgroundColor !== "rgba(0, 0, 0, 0)") {
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, canvas.width / pixelRatio, canvas.height / pixelRatio);
+  }
+  
+  // Set text styling with sharpening techniques
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Enable font smoothing
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  
+  // Support for multiline text
+  if (text.includes('\n')) {
+    const lines = text.split('\n');
+    const lineHeight = fontSize * 1.2;
+    const totalHeight = lines.length * lineHeight;
+    const startY = (canvas.height / pixelRatio - totalHeight) / 2 + lineHeight / 2;
+    
+    lines.forEach((line, index) => {
+      ctx.fillText(line, canvas.width / (2 * pixelRatio), startY + index * lineHeight);
+    });
+  } else {
+    ctx.fillText(text, canvas.width / (2 * pixelRatio), canvas.height / (2 * pixelRatio));
+  }
+  
+  // Create sprite material with the canvas texture
+  const texture = new THREE.CanvasTexture(canvas);
+  
+  // Advanced texture settings for better distant viewing
+  texture.minFilter = THREE.LinearMipmapLinearFilter; // Better mipmapping for distant viewing
+  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = 16; // Increase anisotropic filtering for sharper text at angles
+  texture.needsUpdate = true; // Make sure texture updates properly
+  
+  const material = new THREE.SpriteMaterial({ 
+    map: texture,
+    transparent: true,
+    sizeAttenuation: true, // Ensure proper sizing at different distances
+    depthTest: false, // Allow text to be visible in front of other objects
+    depthWrite: false // Don't write to depth buffer
+  });
+  
+  // Create sprite with the right scale based on text length and font size
+  const sprite = new THREE.Sprite(material);
+  const aspectRatio = canvas.width / canvas.height;
+  
+  // Scale sprite size based on font size and text length - adjusted for better visibility
+  const baseScale = Math.min(text.length * 0.03, 0.8) * (fontSize / 16);
+  sprite.scale.set(baseScale * aspectRatio, baseScale, 1);
+  
+  // Store original scale to allow size adjustments for zoom levels
+  (sprite as any).userData = {
+    originalScale: { 
+      x: baseScale * aspectRatio, 
+      y: baseScale 
+    },
+    textContent: text,
+    fontSize: fontSize
+  };
+  
+  return sprite;
+}
+
 export function createNeuralNetworkVisualization(
   networkStructure: NeuralNetworkStructure
 ): THREE.Group {
@@ -48,33 +137,12 @@ export function createNeuralNetworkVisualization(
     
     // Add a layer label
     const layerLabels = ["Input Layer", "Hidden Layer", "Output Layer"];
-    const labelCanvas = document.createElement('canvas');
-    labelCanvas.width = 256;
-    labelCanvas.height = 64;
-    const ctx = labelCanvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 16px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${layerLabels[layerIndex]} (${nodeCount} nodes)`, 128, 32);
-      
-      const texture = new THREE.CanvasTexture(labelCanvas);
-      const labelMaterial = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        side: THREE.DoubleSide
-      });
-      const labelPlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(2, 0.5),
-        labelMaterial
-      );
-      
-      // Position the label below the layer
-      labelPlane.position.y = -(displayCount * nodeSpacing) / 2 - 0.7;
-      
-      layerGroup.add(labelPlane);
-    }
+    const labelSprite = createTextSprite(`${layerLabels[layerIndex]} (${nodeCount} nodes)`, 14);
+    
+    // Position the label below the layer
+    labelSprite.position.y = -(displayCount * nodeSpacing) / 2 - 0.7;
+    
+    layerGroup.add(labelSprite);
     
     // Create nodes for this layer
     for (let i = 0; i < displayCount; i++) {
@@ -180,68 +248,24 @@ export function createNeuralNetworkVisualization(
   }
 
   // Add a title to the neural network panel
-  const titleCanvas = document.createElement('canvas');
-  titleCanvas.width = 512;
-  titleCanvas.height = 128;
-  const ctx = titleCanvas.getContext('2d');
-  if (ctx) {
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 32px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Neural Network', 256, 64);
-    
-    const texture = new THREE.CanvasTexture(titleCanvas);
-    const titleMaterial = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      side: THREE.DoubleSide
-    });
-    const titlePlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(6, 1.5),
-      titleMaterial
-    );
-    
-    // Position the title above the neural network
-    const maxNodeCount = Math.max(...layers.map(count => Math.min(count, 20)));
-    titlePlane.position.y = (maxNodeCount * nodeSpacing) / 2 + 1;
-    
-    group.add(titlePlane);
-  }
+  const titleSprite = createTextSprite('Neural Network', 32, "rgba(0, 0, 0, 0.5)");
+  
+  // Calculate max node count for positioning
+  const maxNodeCount = Math.max(...layers.map(count => Math.min(count, 20)));
+  titleSprite.position.y = (maxNodeCount * nodeSpacing) / 2 + 1;
+  
+  group.add(titleSprite);
 
   // Add network summary information
-  const infoCanvas = document.createElement('canvas');
-  infoCanvas.width = 512;
-  infoCanvas.height = 256;
-  const infoCtx = infoCanvas.getContext('2d');
-  if (infoCtx) {
-    infoCtx.fillStyle = 'white';
-    infoCtx.font = '14px Arial';
-    infoCtx.textAlign = 'center';
-    infoCtx.textBaseline = 'middle';
-    
-    const totalParams = inputSize * hiddenSize + hiddenSize * outputSize + hiddenSize + outputSize;
-    infoCtx.fillText(`Total Parameters: ${totalParams}`, 256, 20);
-    infoCtx.fillText(`Architecture: ${inputSize}-${hiddenSize}-${outputSize}`, 256, 40);
-    
-    const texture = new THREE.CanvasTexture(infoCanvas);
-    const infoMaterial = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      side: THREE.DoubleSide
-    });
-    const infoPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(4, 2),
-      infoMaterial
-    );
-    
-    // Position the info below the neural network
-    const maxNodeCount = Math.max(...layers.map(count => Math.min(count, 20)));
-    infoPlane.position.y = -(maxNodeCount * nodeSpacing) / 2 - 2;
-    infoPlane.position.z = -layerSpacing;
-    
-    group.add(infoPlane);
-  }
+  const totalParams = inputSize * hiddenSize + hiddenSize * outputSize + hiddenSize + outputSize;
+  const infoText = `Total Parameters: ${totalParams}\nArchitecture: ${inputSize}-${hiddenSize}-${outputSize}`;
+  const infoSprite = createTextSprite(infoText, 14, "rgba(0, 0, 0, 0.5)");
+  
+  // Position the info below the neural network
+  infoSprite.position.y = -(maxNodeCount * nodeSpacing) / 2 - 2;
+  infoSprite.position.z = -layerSpacing;
+  
+  group.add(infoSprite);
 
   return group;
 }

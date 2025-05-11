@@ -269,22 +269,15 @@ export class TrainingManager {
     const height = data.length;
     const width = data[0].length;
     
-    // Generate target data
-    const targets: number[][] = [];
-    for (let i = 0; i < height; i++) {
-      const targetRow: number[] = [];
-      for (let j = 0; j < width; j++) {
-        targetRow.push(this._isEdgeCell(i, j, height, width) ? 1 : 0);
-      }
-      targets.push(targetRow);
-    }
-    
-    // Compare predictions with targets
+    // Compare predictions with input data
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {
-        // Classify: if prediction > 0.5, it's a 1, otherwise 0
-        const predictedClass = predictions[i][j] / 5 > 0.5 ? 1 : 0;
-        if (predictedClass === targets[i][j]) {
+        // Scale back prediction (0-5 range to 0-1)
+        const scaledPrediction = predictions[i][j] / 5;
+        // Calculate difference (closer to 0 means more accurate)
+        const diff = Math.abs(scaledPrediction - data[i][j]);
+        // Consider it correct if the difference is small
+        if (diff < 0.2) {
           correct++;
         }
         total++;
@@ -292,12 +285,5 @@ export class TrainingManager {
     }
     
     return total > 0 ? correct / total : 0;
-  }
-  
-  /**
-   * Check if a cell is on the edge of the grid
-   */
-  private _isEdgeCell(row: number, col: number, height: number, width: number): boolean {
-    return row === 0 || col === 0 || row === height - 1 || col === width - 1;
   }
 }

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { createTextSprite } from "../utils/TextUtils";
 
 export function createPredictionVisualization(predictions: number[][]): THREE.Group {
   const group = new THREE.Group();
@@ -95,30 +96,9 @@ export function createPredictionVisualization(predictions: number[][]): THREE.Gr
   });
 
   // Add a title to the prediction panel
-  const titleCanvas = document.createElement('canvas');
-  titleCanvas.width = 512;
-  titleCanvas.height = 128;
-  const ctx = titleCanvas.getContext('2d');
-  if (ctx) {
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 32px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Neural Network Predictions', 256, 64);
-    
-    const texture = new THREE.CanvasTexture(titleCanvas);
-    const titleMaterial = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      side: THREE.DoubleSide
-    });
-    const titlePlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(6, 1.5),
-      titleMaterial
-    );
-    titlePlane.position.y = (predictions.length * (cellSize + spacing)) / 2 + 1;
-    group.add(titlePlane);
-  }
+  const titleSprite = createTextSprite('Neural Network Predictions', 32, "rgba(0, 0, 0, 0.5)");
+  titleSprite.position.y = (predictions.length * (cellSize + spacing)) / 2 + 1;
+  group.add(titleSprite);
 
   return group;
 }

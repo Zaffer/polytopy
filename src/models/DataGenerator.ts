@@ -140,8 +140,7 @@ export class DataManager {
   }
   
   /**
-   * Generate target data based on the raw data
-   * In this example, we detect edges of the grid
+   * Generate target data for the training samples
    */
   private generateTargetData(data: number[][]): number[][] {
     const height = data.length;
@@ -151,20 +150,13 @@ export class DataManager {
     for (let i = 0; i < height; i++) {
       const targetRow: number[] = [];
       for (let j = 0; j < width; j++) {
-        // Simple target: detect edges
-        targetRow.push(this.isEdgeCell(i, j, height, width) ? 1 : 0);
+        // Use the cell's own value as the target - predicting the input
+        targetRow.push(data[i][j]);
       }
       targetData.push(targetRow);
     }
     
     return targetData;
-  }
-  
-  /**
-   * Check if a cell is on the edge of the grid
-   */
-  private isEdgeCell(row: number, col: number, height: number, width: number): boolean {
-    return row === 0 || col === 0 || row === height - 1 || col === width - 1;
   }
   
   /**
