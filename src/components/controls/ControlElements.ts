@@ -2,25 +2,21 @@ import { ControlElement, SliderOptions } from '../../types/ui';
 
 // Create a simple UI panel for controls
 export function createControlsPanel(): HTMLElement {
-  const panel = document.createElement('div');
+  // Create a section element for better semantics
+  const panel = document.createElement('section');
+  
+  // Add minimal positioning to make controls visible
   panel.style.position = 'absolute';
   panel.style.top = '10px';
   panel.style.left = '10px';
-  panel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-  panel.style.padding = '10px';
-  panel.style.borderRadius = '5px';
-  panel.style.color = 'white';
-  panel.style.fontFamily = 'Arial, sans-serif';
   panel.style.zIndex = '1000';
-  panel.style.minWidth = '200px';
-
-  // Title
-  const title = document.createElement('h3');
-  title.textContent = 'Neural Network Controls';
-  title.style.margin = '0 0 10px 0';
-  title.style.textAlign = 'center';
-  panel.appendChild(title);
-
+  panel.style.backgroundColor = 'white';
+  panel.style.padding = '10px';
+  panel.style.border = '1px solid black';
+  panel.style.minWidth = '250px';
+  panel.style.maxHeight = '90vh';
+  panel.style.overflowY = 'auto';
+  
   return panel;
 }
 
@@ -28,24 +24,9 @@ export function createControlsPanel(): HTMLElement {
 export function addButton(panel: HTMLElement, label: string, onClick: () => void): HTMLButtonElement {
   const button = document.createElement('button');
   button.textContent = label;
-  button.style.display = 'block';
-  button.style.width = '100%';
-  button.style.margin = '5px 0';
-  button.style.padding = '5px';
-  button.style.backgroundColor = '#3498db';
-  button.style.border = 'none';
-  button.style.borderRadius = '3px';
-  button.style.color = 'white';
-  button.style.cursor = 'pointer';
+  button.style.margin = '2px';
+  button.style.padding = '4px 8px';
   button.addEventListener('click', onClick);
-  
-  button.addEventListener('mouseenter', () => {
-    button.style.backgroundColor = '#2980b9';
-  });
-  
-  button.addEventListener('mouseleave', () => {
-    button.style.backgroundColor = '#3498db';
-  });
   
   panel.appendChild(button);
   return button;
@@ -62,12 +43,15 @@ export function addSlider(
   onChange: (value: number) => void
 ): HTMLInputElement {
   const container = document.createElement('div');
-  container.style.margin = '10px 0';
+  container.style.margin = '6px 0';
+  
+  const sliderId = `slider-${Math.random().toString(36).substring(2, 9)}`;
   
   const labelElement = document.createElement('label');
+  labelElement.htmlFor = sliderId;
   labelElement.textContent = `${label}: ${value}`;
   labelElement.style.display = 'block';
-  labelElement.style.marginBottom = '5px';
+  labelElement.style.marginBottom = '3px';
   container.appendChild(labelElement);
   
   const slider = document.createElement('input');
@@ -76,6 +60,7 @@ export function addSlider(
   slider.max = max.toString();
   slider.step = step.toString();
   slider.value = value.toString();
+  slider.id = sliderId;
   slider.style.width = '100%';
   
   slider.addEventListener('input', () => {
@@ -97,17 +82,17 @@ export function addCheckbox(
   onChange: (checked: boolean) => void
 ): HTMLInputElement {
   const container = document.createElement('div');
-  container.style.margin = '5px 0';
-  container.style.display = 'flex';
-  container.style.alignItems = 'center';
+  container.style.margin = '4px 0';
   
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.checked = checked;
-  checkbox.style.marginRight = '5px';
+  checkbox.id = `checkbox-${Math.random().toString(36).substring(2, 9)}`;
   
   const labelElement = document.createElement('label');
+  labelElement.htmlFor = checkbox.id;
   labelElement.textContent = label;
+  labelElement.style.marginLeft = '4px';
   
   checkbox.addEventListener('change', () => {
     onChange(checkbox.checked);
@@ -127,18 +112,15 @@ export function addRadioGroup(
   onChange: (selectedId: string) => void
 ): { radioGroup: HTMLElement, radioButtons: HTMLInputElement[] } {
   const container = document.createElement('div');
-  container.style.margin = '10px 0';
+  container.style.margin = '6px 0';
   
   const labelElement = document.createElement('label');
   labelElement.textContent = label;
   labelElement.style.display = 'block';
-  labelElement.style.marginBottom = '5px';
+  labelElement.style.marginBottom = '4px';
   container.appendChild(labelElement);
   
   const radioGroup = document.createElement('div');
-  radioGroup.style.display = 'flex';
-  radioGroup.style.flexDirection = 'column';
-  radioGroup.style.gap = '5px';
   
   const radioButtons: HTMLInputElement[] = [];
   
@@ -147,19 +129,18 @@ export function addRadioGroup(
   
   options.forEach(option => {
     const radioContainer = document.createElement('div');
-    radioContainer.style.display = 'flex';
-    radioContainer.style.alignItems = 'center';
+    radioContainer.style.margin = '3px 0';
     
     const radio = document.createElement('input');
     radio.type = 'radio';
     radio.id = option.id;
     radio.name = groupName;
     radio.checked = option.checked || false;
-    radio.style.marginRight = '5px';
     
     const radioLabel = document.createElement('label');
     radioLabel.htmlFor = option.id;
     radioLabel.textContent = option.label;
+    radioLabel.style.marginLeft = '4px';
     
     radio.addEventListener('change', () => {
       if (radio.checked) {
@@ -184,8 +165,8 @@ export function addRadioGroup(
 export function addSeparator(panel: HTMLElement): void {
   const separator = document.createElement('hr');
   separator.style.margin = '10px 0';
-  separator.style.border = '0';
-  separator.style.borderTop = '1px solid rgba(255, 255, 255, 0.3)';
+  separator.style.borderTop = '1px solid #ddd';
+  separator.style.borderBottom = 'none';
   panel.appendChild(separator);
 }
 
@@ -198,8 +179,9 @@ export function addTextDisplay(panel: HTMLElement, label: string): {
   const container = document.createElement('div');
   container.style.margin = '5px 0';
   
-  const labelElement = document.createElement('span');
+  const labelElement = document.createElement('label');
   labelElement.textContent = `${label}: `;
+  labelElement.style.fontWeight = 'normal';
   
   const valueElement = document.createElement('span');
   valueElement.style.fontWeight = 'bold';

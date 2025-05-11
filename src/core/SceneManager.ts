@@ -1,9 +1,8 @@
 import * as THREE from "three";
-import { WebGLRenderer } from "three";
+import WebGPURenderer from "three/src/renderers/webgpu/WebGPURenderer.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { VisualizationManager } from "../visualizations/VisualizationManager";
-import { AppController } from "./AppController";
 import { PanelType, SceneConfig, DEFAULT_SCENE_CONFIG } from "../types/scene";
 
 /**
@@ -13,12 +12,11 @@ export class SceneManager {
   // THREE.js components
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
-  private renderer: THREE.WebGLRenderer;
+  private renderer: WebGPURenderer;
   private controls: OrbitControls;
   private panels: Map<PanelType, THREE.Group> = new Map();
   
   // Application components
-  private appController?: AppController;
   private visualizationManager: VisualizationManager;
   
   // Configuration
@@ -40,7 +38,11 @@ export class SceneManager {
     );
     this.camera.position.copy(this.config.camera.initialPosition);
     
-    this.renderer = new WebGLRenderer({ antialias: this.config.renderer.antialias });
+    // Initialize renderer
+    this.renderer = new WebGPURenderer({ 
+      antialias: this.config.renderer.antialias,
+      powerPreference: 'high-performance' 
+    });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(this.renderer.domElement);
@@ -60,23 +62,15 @@ export class SceneManager {
   }
   
   /**
-   * Set the application controller
-   */
-  public setAppController(appController: AppController): void {
-    this.appController = appController;
-    this.initVisualizations();
-  }
-  
-  /**
    * Add lights to the scene
    */
   private addLights(): void {
-    const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
-    this.scene.add(ambientLight);
+    // const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
+    // this.scene.add(ambientLight);
     
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(1, 1, 1);
-    this.scene.add(directionalLight);
+    // const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    // directionalLight.position.set(1, 1, 1);
+    // this.scene.add(directionalLight);
   }
   
   /**
@@ -86,31 +80,6 @@ export class SceneManager {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-  
-  /**
-   * Initialize visualizations
-   */
-  private initVisualizations(): void {
-    if (!this.appController) {
-      console.warn("AppController not set, cannot initialize visualizations");
-      return;
-    }
-    
-    const dataManager = this.appController.getDataManager();
-    const trainingManager = this.appController.getTrainingManager();
-    
-    // Set up data visualization
-    this.visualizationManager.updateDataVisualization(dataManager.getData$());
-    
-    // Set up neural network visualization
-    this.visualizationManager.updateNetworkVisualization();
-    
-    // Set up prediction visualization
-    this.visualizationManager.updatePredictionVisualization(trainingManager.getPredictions$());
-    
-    // Set up polytope visualization
-    this.visualizationManager.updatePolytopeVisualization();
   }
   
   /**
@@ -128,9 +97,6 @@ export class SceneManager {
    * Clean up resources
    */
   public dispose(): void {
-    if (this.appController) {
-      this.appController.dispose();
-    }
     this.visualizationManager.dispose();
     this.renderer.setAnimationLoop(null);
     window.removeEventListener("resize", this.onWindowResize.bind(this));
@@ -201,12 +167,5 @@ export class SceneManager {
   
   public getCamera(): THREE.PerspectiveCamera {
     return this.camera;
-  }
-  
-  public getAppController(): AppController {
-    if (!this.appController) {
-      throw new Error("AppController not initialized");
-    }
-    return this.appController;
   }
 }

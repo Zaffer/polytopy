@@ -57,17 +57,17 @@ export class TrainingManager {
    * Start the training process
    */
   public startTraining(): void {
-    const trainingConfig = this.appState.trainingConfig.getValue();
+    // Only start if not already training
+    if (this.appState.trainingConfig.getValue().isTraining) {
+      return;
+    }
     
-    // Don't start if already training
-    if (trainingConfig.isTraining) return;
+    // Create a fresh Subject for stop signal
+    this.stopTraining$ = new Subject<void>();
     
     // Update state
     this.appState.updateTrainingConfig({ isTraining: true });
     this.appState.setStatus("Training...");
-    
-    // Reset stop signal
-    this.stopTraining$ = new Subject<void>();
     
     // Start training loop
     this._runTrainingLoop();
@@ -77,15 +77,22 @@ export class TrainingManager {
    * Stop the training process
    */
   public stopTraining(): void {
+    // Only stop if currently training
+    if (!this.appState.trainingConfig.getValue().isTraining) {
+      return;
+    }
+    
     // Signal to stop training
     this.stopTraining$.next();
     this.stopTraining$.complete();
     
+    // Clear any scheduled training tasks
     if (this.trainingTask !== null) {
       window.clearTimeout(this.trainingTask);
       this.trainingTask = null;
     }
     
+    // Make sure training state is set to false
     this.appState.updateTrainingConfig({ isTraining: false });
     this.appState.setStatus("Paused");
   }
@@ -117,7 +124,13 @@ export class TrainingManager {
    * Private method to run the training loop
    */
   private _runTrainingLoop(): void {
+    // Get fresh state at the start of the loop
     const trainingConfig = this.appState.trainingConfig.getValue();
+    
+    // Check if training is still active
+    if (!trainingConfig.isTraining) {
+      return; // Exit if training has been stopped
+    }
     
     // Check if we've reached the target number of epochs
     if (trainingConfig.currentEpoch >= trainingConfig.epochs) {
@@ -128,22 +141,37 @@ export class TrainingManager {
     
     // Train for one epoch
     this._trainOneEpoch().then(() => {
+      // Get fresh state after epoch completes
+      const currentState = this.appState.trainingConfig.getValue();
+      
+      // Check if training is still active
+      if (!currentState.isTraining) {
+        return; // Exit if training has been stopped
+      }
+      
       // Increment epoch
-      const newEpoch = trainingConfig.currentEpoch + 1;
+      const newEpoch = currentState.currentEpoch + 1;
       this.appState.updateTrainingConfig({ currentEpoch: newEpoch });
       
       // Update visualizations at specified intervals or at the end
-      if (newEpoch % trainingConfig.updateInterval === 0 || newEpoch >= trainingConfig.epochs) {
+      if (newEpoch % currentState.updateInterval === 0 || newEpoch >= currentState.epochs) {
         this.updatePredictions();
       }
       
-      // Continue training or finish
-      if (newEpoch < trainingConfig.epochs && this.appState.trainingConfig.getValue().isTraining) {
+      // Check if we need to continue training
+      if (newEpoch < currentState.epochs) {
+        // Schedule next training loop iteration
         this.trainingTask = window.setTimeout(() => this._runTrainingLoop(), 0);
       } else {
+        // We're done training
         this.appState.updateTrainingConfig({ isTraining: false });
-        this.appState.setStatus(newEpoch >= trainingConfig.epochs ? "Complete" : "Paused");
+        this.appState.setStatus("Complete");
       }
+    }).catch(error => {
+      console.error("Training error:", error);
+      // Ensure we clean up if there's an error
+      this.appState.updateTrainingConfig({ isTraining: false });
+      this.appState.setStatus("Error");
     });
   }
   

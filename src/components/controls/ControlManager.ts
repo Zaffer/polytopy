@@ -6,7 +6,7 @@ import { PanelType } from "../../types/scene";
 /**
  * UIManager class to handle reactive UI updates and user interactions
  */
-export class UIManager {
+export class ControlManager {
   private appState: AppState;
   private subscriptions: Subscription[] = [];
   
@@ -25,11 +25,21 @@ export class UIManager {
     polytopesCheckbox?: HTMLInputElement;
   } = {};
   
+  // Training state callback
+  private trainingStateCallbacks: ((isTraining: boolean) => void)[] = [];
+  
   constructor(private appController: AppController) {
     this.appState = AppState.getInstance();
     
     // Set up state subscriptions when the UI manager is created
     this.setupStateSubscriptions();
+  }
+  
+  /**
+   * Get the AppState instance
+   */
+  public getAppState(): AppState {
+    return this.appState;
   }
   
   /**
@@ -51,6 +61,9 @@ export class UIManager {
         if (this.elements.epochDisplay) {
           this.elements.epochDisplay.textContent = config.currentEpoch.toString();
         }
+        
+        // Notify training state subscribers when the state changes
+        this.notifyTrainingStateChange(config.isTraining);
       })
     );
     
@@ -112,6 +125,31 @@ export class UIManager {
         }
       })
     );
+  }
+  
+  /**
+   * Subscribe to training state changes
+   */
+  public subscribeToTrainingState(callback: (isTraining: boolean) => void): void {
+    this.trainingStateCallbacks.push(callback);
+    
+    // Initialize with current state
+    const isTraining = this.appState.trainingConfig.getValue().isTraining;
+    callback(isTraining);
+  }
+  
+  /**
+   * Notify subscribers about training state change
+   */
+  private notifyTrainingStateChange(isTraining: boolean): void {
+    // Make sure state matches what we're notifying
+    const currentState = this.appState.trainingConfig.getValue().isTraining;
+    if (currentState !== isTraining) {
+      // Update the app state if it's not in sync
+      this.appState.updateTrainingConfig({ isTraining });
+    }
+    // Notify all subscribers
+    this.trainingStateCallbacks.forEach(callback => callback(isTraining));
   }
   
   /**
@@ -189,15 +227,24 @@ export class UIManager {
   // Action handlers
   
   public onStartTraining(): void {
+    // Tell the app controller to start training
     this.appController.startTraining();
+    
+    // Immediately notify subscribers (even before we receive the next state update)
+    this.notifyTrainingStateChange(true);
   }
   
   public onStopTraining(): void {
+    // Tell the app controller to stop training
     this.appController.stopTraining();
+    
+    // Immediately notify subscribers (even before we receive the next state update)
+    this.notifyTrainingStateChange(false);
   }
   
   public onResetNetwork(): void {
     this.appController.resetNetwork();
+    this.notifyTrainingStateChange(false);
   }
   
   public onRegenerateData(): void {

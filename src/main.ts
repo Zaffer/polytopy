@@ -1,36 +1,15 @@
-import { SceneManager } from "./core/SceneManager";
-import { AppController } from "./core/AppController";
-import { setupControls } from "./components/controls";
-import { DEFAULT_SCENE_CONFIG } from "./types/scene";
+import { Application } from "./App";
 
 /**
  * Main application entry point
  */
 async function main(): Promise<void> {
-  // Initialize the scene manager
-  const sceneManager = new SceneManager();
+  // Create and start the application
+  const app = new Application();
+  const controlsPanel = app.start();
   
-  // Initialize the application controller 
-  const appController = new AppController(
-    sceneManager, 
-    DEFAULT_SCENE_CONFIG.dataGridSize.width,
-    DEFAULT_SCENE_CONFIG.dataGridSize.height
-  );
-  
-  // Set the app controller in the scene manager
-  sceneManager.setAppController(appController);
-  
-  // Create and add UI controls
-  const controlsPanel = setupControls(appController);
+  // Add UI to the document
   document.body.appendChild(controlsPanel);
-
-  // Start the animation loop
-  sceneManager.startAnimationLoop();
-  
-  // Clean up on window unload
-  window.addEventListener('beforeunload', () => {
-    sceneManager.dispose();
-  });
 }
 
 // Start the application

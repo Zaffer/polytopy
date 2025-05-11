@@ -7,7 +7,6 @@ import { AppState } from '../utils/AppState';
 
 /**
  * AppController handles application logic and communication between components
- * Separating this from SceneManager allows SceneManager to focus on 3D scene management
  */
 export class AppController {
   private dataManager: DataManager;
