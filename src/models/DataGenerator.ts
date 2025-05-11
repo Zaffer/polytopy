@@ -12,14 +12,9 @@ export class DataManager {
   // Observable for the processed training samples
   private samples$: Observable<TrainingSample[]>;
   
-  // Window size for context (e.g., 3x3 window around each cell)
-  private windowSize: number;
-  
-  constructor(width: number = 10, height: number = 10, windowSize: number = 3) {
-    this.windowSize = windowSize;
-    
+  constructor(width: number = 10, height: number = 10) {
     // Initialize with randomly generated data
-    const initialData = this.generateBinaryData(width, height);
+    const initialData = this.generatePatternData(width, height);
     this.dataSubject = new BehaviorSubject<number[][]>(initialData);
     
     // Create derived observable for samples
@@ -50,26 +45,28 @@ export class DataManager {
   }
   
   /**
-   * Generate new binary data and update the observable
+   * Generate new data and update the observable
    */
   public regenerateData(width: number, height: number): void {
-    const newData = this.generateBinaryData(width, height);
+    const newData = this.generatePatternData(width, height);
     this.dataSubject.next(newData);
   }
   
   /**
    * Generate a grid of binary data (0s and 1s)
    */
-  private generateBinaryData(width: number, height: number): number[][] {
+  private generatePatternData(width: number, height: number): number[][] {
     const data: number[][] = [];
     
     // Generate rows
     for (let i = 0; i < height; i++) {
       const row: number[] = [];
       
-      // Generate random binary values for each cell
+      // Generate values - random 1's and 0's
       for (let j = 0; j < width; j++) {
-        row.push(Math.random() > 0.5 ? 1 : 0);
+        // Random binary value (0 or 1)
+        const value = Math.random() > 0.5 ? 1 : 0;
+        row.push(value);
       }
       
       data.push(row);
@@ -79,24 +76,21 @@ export class DataManager {
   }
   
   /**
-   * Process raw data into training samples with input windows and target values
+   * Process raw data into training samples
    */
   private processDataIntoSamples(data: number[][]): TrainingSample[] {
     const samples: TrainingSample[] = [];
     const height = data.length;
     const width = data[0].length;
     
-    // Generate target data (edges in this case)
-    const targetData = this.generateTargetData(data);
-    
     // Create a sample for each cell
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {
-        // Extract input window centered at this cell
-        const input = this.extractInputWindow(data, i, j);
+        // Input is the normalized coordinates
+        const input = [i / height, j / width];
         
-        // Get target for this cell
-        const target = [targetData[i][j]];
+        // Target is the cell value
+        const target = [data[i][j]];
         
         // Create sample
         samples.push({
@@ -110,53 +104,6 @@ export class DataManager {
     
     // Shuffle samples for better training
     return this.shuffleSamples(samples);
-  }
-  
-  /**
-   * Extract a window of cells centered at the given coordinates
-   */
-  private extractInputWindow(data: number[][], centerRow: number, centerCol: number): number[] {
-    const height = data.length;
-    const width = data[0].length;
-    const halfWindow = Math.floor(this.windowSize / 2);
-    const input: number[] = [];
-    
-    // Extract window
-    for (let di = -halfWindow; di <= halfWindow; di++) {
-      for (let dj = -halfWindow; dj <= halfWindow; dj++) {
-        const ni = centerRow + di;
-        const nj = centerCol + dj;
-        
-        // Use 0 for cells outside the grid
-        if (ni >= 0 && ni < height && nj >= 0 && nj < width) {
-          input.push(data[ni][nj]);
-        } else {
-          input.push(0);
-        }
-      }
-    }
-    
-    return input;
-  }
-  
-  /**
-   * Generate target data for the training samples
-   */
-  private generateTargetData(data: number[][]): number[][] {
-    const height = data.length;
-    const width = data[0].length;
-    const targetData: number[][] = [];
-    
-    for (let i = 0; i < height; i++) {
-      const targetRow: number[] = [];
-      for (let j = 0; j < width; j++) {
-        // Use the cell's own value as the target - predicting the input
-        targetRow.push(data[i][j]);
-      }
-      targetData.push(targetRow);
-    }
-    
-    return targetData;
   }
   
   /**

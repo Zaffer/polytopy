@@ -37,7 +37,7 @@ export class TrainingManager {
       if (!this.appState.trainingConfig.getValue().isTraining) {
         this.neuralNetwork = new SimpleNeuralNetwork(
           config.inputSize,
-          config.hiddenSize,
+          config.hiddenSizes,
           config.outputSize,
           config.learningRate
         );
@@ -188,9 +188,18 @@ export class TrainingManager {
       });
     });
     
-    // Train on each sample
-    for (const sample of samples) {
-      this.neuralNetwork.train(sample.input, sample.target);
+    // Get batch size from config
+    const batchSize = this.appState.networkConfig.getValue().batchSize;
+    
+    // Train in mini-batches
+    for (let i = 0; i < samples.length; i += batchSize) {
+      // Get current batch
+      const batch = samples.slice(i, Math.min(i + batchSize, samples.length));
+      
+      // Train on each sample in the batch
+      for (const sample of batch) {
+        this.neuralNetwork.train(sample.input, sample.target);
+      }
     }
     
     return Promise.resolve();
@@ -209,14 +218,14 @@ export class TrainingManager {
     for (let i = 0; i < height; i++) {
       const row: number[] = [];
       for (let j = 0; j < width; j++) {
-        // Get input window for this cell
-        const input = this._getInputWindow(data, i, j);
+        // Get input - normalized coordinates
+        const input = [i / height, j / width];
         
         // Get prediction
         try {
-          const { output } = this.neuralNetwork.forward(input);
+          const result = this.neuralNetwork.forward(input);
           // Scale to make it more visible (0-5 range)
-          row.push(output[0] * 5);
+          row.push(result.output[0] * 5);
         } catch (e) {
           console.error("Error in forward pass:", e);
           row.push(0); // Default value on error
@@ -231,33 +240,6 @@ export class TrainingManager {
     // Calculate and update accuracy
     const accuracy = this._calculateAccuracy(predictions, data);
     this.appState.setAccuracy(accuracy);
-  }
-  
-  /**
-   * Get the input window for a specific cell
-   */
-  private _getInputWindow(data: number[][], row: number, col: number): number[] {
-    const height = data.length;
-    const width = data[0].length;
-    const windowSize = 3; // 3x3 window
-    const halfWindow = Math.floor(windowSize / 2);
-    const input: number[] = [];
-    
-    for (let di = -halfWindow; di <= halfWindow; di++) {
-      for (let dj = -halfWindow; dj <= halfWindow; dj++) {
-        const ni = row + di;
-        const nj = col + dj;
-        
-        // Use 0 for cells outside the grid
-        if (ni >= 0 && ni < height && nj >= 0 && nj < width) {
-          input.push(data[ni][nj]);
-        } else {
-          input.push(0);
-        }
-      }
-    }
-    
-    return input;
   }
   
   /**

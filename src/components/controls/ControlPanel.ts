@@ -143,19 +143,19 @@ export function setupControls(appController: AppController): HTMLElement {
   visibilityFieldset.appendChild(visibilityLegend);
   controlsPanel.appendChild(visibilityFieldset);
   
-  const trainingDataCheckbox = addCheckbox(visibilityFieldset, "👁️  Show Training Data", true, (checked) => {
+  const trainingDataCheckbox = addCheckbox(visibilityFieldset, "Training Data", true, (checked) => {
     uiManager.onPanelVisibilityChange("trainingData", checked);
   });
   
-  const neuralNetworkCheckbox = addCheckbox(visibilityFieldset, "👁️  Show Neural Network", true, (checked) => {
+  const neuralNetworkCheckbox = addCheckbox(visibilityFieldset, "Neural Network", true, (checked) => {
     uiManager.onPanelVisibilityChange("neuralNetwork", checked);
   });
   
-  const predictionsCheckbox = addCheckbox(visibilityFieldset, "👁️  Show Predictions", true, (checked) => {
+  const predictionsCheckbox = addCheckbox(visibilityFieldset, "Predictions", true, (checked) => {
     uiManager.onPanelVisibilityChange("predictions", checked);
   });
   
-  const polytopesCheckbox = addCheckbox(visibilityFieldset, "👁️  Show Polytopes", true, (checked) => {
+  const polytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes", true, (checked) => {
     uiManager.onPanelVisibilityChange("polytopes", checked);
   });
   

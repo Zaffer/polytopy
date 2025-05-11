@@ -51,25 +51,10 @@ export function createPredictionVisualization(predictions: number[][]): THREE.Gr
       const range = Math.max(1, maxValue - minValue);
       const normalizedValue = Math.max(0.2, Math.min(1, (safeValue - minValue) / range));
       
-      // Use a fixed color scheme that ensures visibility
-      let r, g, b;
-      
-      if (normalizedValue < 0.33) {
-        // Blue for low values
-        r = 0;
-        g = normalizedValue;
-        b = 0.7;
-      } else if (normalizedValue < 0.66) {
-        // Green for medium values
-        r = normalizedValue * 0.7;
-        g = 0.7;
-        b = (1 - normalizedValue) * 0.7;
-      } else {
-        // Red for high values
-        r = 0.7;
-        g = (1 - normalizedValue) * 0.7;
-        b = 0;
-      }
+      // Use a blue to red color spectrum
+      const r = normalizedValue * 0.8; // Red component increases with value
+      const b = (1 - normalizedValue) * 0.8; // Blue component decreases with value
+      const g = 0.1; // Very small green component for better visibility
       
       const material = new THREE.MeshBasicMaterial({ 
         color: new THREE.Color(r, g, b), 

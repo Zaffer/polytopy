@@ -85,7 +85,7 @@ export class ControlManager {
         }
         
         if (this.elements.hiddenLayerSizeSlider) {
-          this.elements.hiddenLayerSizeSlider.value = config.hiddenSize.toString();
+          this.elements.hiddenLayerSizeSlider.value = config.hiddenSizes[0].toString();
         }
       })
     );
@@ -190,7 +190,7 @@ export class ControlManager {
     
     learningRateSlider.value = networkConfig.learningRate.toString();
     epochsSlider.value = trainingConfig.epochs.toString();
-    hiddenLayerSizeSlider.value = networkConfig.hiddenSize.toString();
+    hiddenLayerSizeSlider.value = networkConfig.hiddenSizes[0].toString();
     updateIntervalSlider.value = trainingConfig.updateInterval.toString();
   }
   

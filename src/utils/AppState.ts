@@ -41,7 +41,7 @@ export class AppState {
     const config = this.networkConfig.getValue();
     return new SimpleNeuralNetwork(
       config.inputSize,
-      config.hiddenSize,
+      config.hiddenSizes,
       config.outputSize,
       config.learningRate
     );

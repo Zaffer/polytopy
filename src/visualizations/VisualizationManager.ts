@@ -50,7 +50,7 @@ export class VisualizationManager {
       this.appState.networkConfig.subscribe(config => {
         const visualization = createNeuralNetworkVisualization({
           inputSize: config.inputSize,
-          hiddenSize: config.hiddenSize,
+          hiddenSizes: config.hiddenSizes,
           outputSize: config.outputSize
         });
         this.sceneManager.updatePanel(PanelType.NEURAL_NETWORK, visualization);

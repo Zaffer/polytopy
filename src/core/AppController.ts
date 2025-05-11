@@ -107,7 +107,7 @@ export class AppController {
    * Update hidden layer size
    */
   public setHiddenLayerSize(value: number): void {
-    this.appState.updateNetworkConfig({ hiddenSize: Math.round(value) });
+    this.appState.updateNetworkConfig({ hiddenSizes: [Math.round(value), Math.round(value)] });
   }
   
   /**

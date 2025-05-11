@@ -1,4 +1,3 @@
-import { ControlElement, SliderOptions } from '../../types/ui';
 
 // Create a simple UI panel for controls
 export function createControlsPanel(): HTMLElement {

@@ -14,7 +14,7 @@ export interface TrainingSample {
  */
 export interface NeuralNetworkStructure {
   inputSize: number;
-  hiddenSize: number;
+  hiddenSizes: number[];
   outputSize: number;
 }
 
@@ -23,9 +23,10 @@ export interface NeuralNetworkStructure {
  */
 export interface NetworkConfig {
   inputSize: number;
-  hiddenSize: number;
+  hiddenSizes: number[];
   outputSize: number;
   learningRate: number;
+  batchSize: number;
 }
 
 /**
@@ -52,10 +53,11 @@ export interface VisualizationOptions {
  * Default network configuration
  */
 export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
-  inputSize: 9, // 3x3 window
-  hiddenSize: 8,
+  inputSize: 2, // x, y coordinates
+  hiddenSizes: [8, 8], // Two hidden layers with 8 neurons each
   outputSize: 1,
   learningRate: 0.05,
+  batchSize: 32,
 };
 
 /**
