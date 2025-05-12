@@ -33,3 +33,13 @@ If you would like to contribute to this project, please fork the repository and 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
+
+
+## TODO
+
+- [ ] Add strange area to data.
+
+   As per: https://arxiv.org/pdf/2210.01892
+   > "This reflects an abundance of unexpected structure"
+
+   Test capacity of polysemantic neurons to learn unexpected structure, ie. a regular shape with one strange portion. Expect that this area will take up relatively more neurons to learn.
