@@ -22,6 +22,7 @@ export class AppState {
   public accuracy = new BehaviorSubject<number>(0);
   public status = new BehaviorSubject<string>('Ready');
   public lossHistory = new BehaviorSubject<Array<{epoch: number, loss: number}>>([]);
+  public sampleLossHistory = new BehaviorSubject<Array<{sample: number, loss: number}>>([]);
 
   private constructor() {}
 
@@ -102,10 +103,20 @@ export class AppState {
   }
 
   /**
+   * Add a sample loss value to the history
+   */
+  public addSampleLoss(sample: number, loss: number): void {
+    const currentHistory = this.sampleLossHistory.getValue();
+    const newHistory = [...currentHistory, { sample, loss }];
+    this.sampleLossHistory.next(newHistory);
+  }
+
+  /**
    * Clear loss history
    */
   public clearLossHistory(): void {
     this.lossHistory.next([]);
+    this.sampleLossHistory.next([]);
   }
 
   /**

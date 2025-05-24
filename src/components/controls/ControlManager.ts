@@ -346,11 +346,4 @@ export class ControlManager {
   public onPanelVisibilityChange(panelName: string, visible: boolean): void {
     this.appController.setVisualizationOption(panelName as PanelType, visible);
   }
-  
-  /**
-   * Reset camera to default position
-   */
-  public onResetCamera(): void {
-    this.appController.resetCamera();
-  }
 }

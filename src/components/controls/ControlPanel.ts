@@ -223,17 +223,6 @@ export function setupControls(appController: AppController): HTMLElement {
     polytopesCheckbox
   );
   
-  // Camera controls
-  const cameraFieldset = document.createElement('fieldset');
-  const cameraLegend = document.createElement('legend');
-  cameraLegend.textContent = 'Camera Controls';
-  cameraFieldset.appendChild(cameraLegend);
-  controlsPanel.appendChild(cameraFieldset);
-  
-  addButton(cameraFieldset, "🎥  Reset Camera", () => {
-    uiManager.onResetCamera();
-  });
-  
   // Add cleanup handler for window unload
   window.addEventListener('beforeunload', () => {
     uiManager.dispose();

@@ -16,22 +16,28 @@ export class LossChart {
       bottom: 10px;
       left: 10px;
       right: 10px;
-      margin: 0;
-      padding: 10px;
       background: rgba(0, 0, 0, 0.8);
-      border: 1px solid #666;
-      border-radius: 4px;
     `;
     
     // Create legend
     const legend = document.createElement('legend');
     legend.textContent = 'Training Loss';
     legend.style.cssText = `
-      color: #fff;
+      color: white;
       font-size: 12px;
-      padding: 0 5px;
     `;
     this.container.appendChild(legend);
+    
+    // Create loss value display
+    const lossDisplay = document.createElement('div');
+    lossDisplay.id = 'lossDisplay';
+    lossDisplay.style.cssText = `
+      color: white;
+      font-size: 10px;
+      margin: 5px;
+      font-family: monospace;
+    `;
+    this.container.appendChild(lossDisplay);
     
     // Create canvas
     this.canvas = document.createElement('canvas');
@@ -39,8 +45,6 @@ export class LossChart {
     this.canvas.height = 80; // Slightly smaller to fit in fieldset
     this.canvas.style.cssText = `
       width: 100%;
-      background: #111;
-      border: 1px solid #444;
     `;
     
     this.ctx = this.canvas.getContext('2d')!;
@@ -51,39 +55,88 @@ export class LossChart {
     window.addEventListener('resize', () => {
       this.canvas.width = window.innerWidth - 60; // Account for container padding and margins
       // Redraw with current data
-      const currentData = AppState.getInstance().lossHistory.getValue();
-      this.draw(currentData);
+      this.redrawChart();
     });
     
-    // Subscribe to loss updates
-    AppState.getInstance().lossHistory.subscribe(data => {
-      this.draw(data);
+    // Subscribe to both loss histories
+    AppState.getInstance().lossHistory.subscribe(() => {
+      this.redrawChart();
+    });
+    
+    AppState.getInstance().sampleLossHistory.subscribe(() => {
+      this.redrawChart();
     });
   }
   
-  private draw(data: Array<{epoch: number, loss: number}>): void {
-    if (data.length === 0) return;
-    
+  private redrawChart(): void {
+    const epochData = AppState.getInstance().lossHistory.getValue();
+    const sampleData = AppState.getInstance().sampleLossHistory.getValue();
+    this.draw(epochData, sampleData);
+  }
+  
+  private draw(epochData: Array<{epoch: number, loss: number}>, sampleData: Array<{sample: number, loss: number}>): void {
     // Clear
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
-    // Draw line
-    this.ctx.strokeStyle = '#0f0';
-    this.ctx.lineWidth = 1;
-    this.ctx.beginPath();
+    // Find min and max loss for scaling (considering both datasets)
+    const allLosses = [
+      ...(epochData.length > 0 ? epochData.map(d => d.loss) : []),
+      ...(sampleData.length > 0 ? sampleData.map(d => d.loss) : [])
+    ];
     
-    const maxLoss = Math.max(...data.map(d => d.loss));
-    const maxEpoch = Math.max(...data.map(d => d.epoch));
+    if (allLosses.length === 0) return;
     
-    for (let i = 0; i < data.length; i++) {
-      const x = (data[i].epoch / maxEpoch) * this.canvas.width;
-      const y = this.canvas.height - (data[i].loss / maxLoss) * this.canvas.height;
+    const maxLoss = Math.max(...allLosses);
+    const minLoss = Math.min(...allLosses);
+    const lossRange = maxLoss - minLoss || 1; // Avoid division by zero
+    
+    // Draw sample losses (cyan line) - using array indices for X-axis
+    if (sampleData.length > 1) {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = '#00ffff';
+      this.ctx.lineWidth = 1;
       
-      if (i === 0) this.ctx.moveTo(x, y);
-      else this.ctx.lineTo(x, y);
+      sampleData.forEach((data, i) => {
+        const x = (i / (sampleData.length - 1)) * this.canvas.width;
+        const y = this.canvas.height - ((data.loss - minLoss) / lossRange) * this.canvas.height;
+        
+        if (i === 0) {
+          this.ctx.moveTo(x, y);
+        } else {
+          this.ctx.lineTo(x, y);
+        }
+      });
+      this.ctx.stroke();
     }
     
-    this.ctx.stroke();
+    // Draw epoch losses (red line) - using array indices for X-axis
+    if (epochData.length > 1) {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = '#ff0000';
+      this.ctx.lineWidth = 2;
+      
+      epochData.forEach((data, i) => {
+        const x = (i / (epochData.length - 1)) * this.canvas.width;
+        const y = this.canvas.height - ((data.loss - minLoss) / lossRange) * this.canvas.height;
+        
+        if (i === 0) {
+          this.ctx.moveTo(x, y);
+        } else {
+          this.ctx.lineTo(x, y);
+        }
+      });
+      this.ctx.stroke();
+    }
+    
+    // Update loss display text
+    const lossDisplay = document.getElementById('lossDisplay');
+    if (lossDisplay) {
+      const currentSampleLoss = sampleData.length > 0 ? sampleData[sampleData.length - 1].loss : 0;
+      const currentEpochLoss = epochData.length > 0 ? epochData[epochData.length - 1].loss : 0;
+      const currentEpoch = epochData.length > 0 ? epochData[epochData.length - 1].epoch : 0;
+      
+      lossDisplay.textContent = `Sample Loss: ${currentSampleLoss.toFixed(4)} | Epoch Loss: ${currentEpochLoss.toFixed(4)} | Epoch: ${currentEpoch}`;
+    }
   }
   
   destroy(): void {

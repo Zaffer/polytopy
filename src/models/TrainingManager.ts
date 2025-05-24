@@ -21,6 +21,9 @@ export class TrainingManager {
   
   // Training timer
   private trainingTask: number | null = null;
+
+  // Sample counter for loss tracking
+  private sampleCounter: number = 0;
   
   constructor(private dataManager: DataManager) {
     this.appState = AppState.getInstance();
@@ -121,6 +124,9 @@ export class TrainingManager {
     // Clear loss history
     this.appState.clearLossHistory();
     
+    // Reset sample counter
+    this.sampleCounter = 0;
+    
     // Reset predictions
     this.updatePredictions();
     
@@ -199,13 +205,11 @@ export class TrainingManager {
     
     const currentEpoch = this.appState.trainingConfig.getValue().currentEpoch;
     
-    // Calculate loss much less frequently and with fewer samples for performance
-    if (currentEpoch % 20 === 0) {
-      // Use only first 10 samples for quick loss calculation
-      const lossSamples = samples.slice(0, 10);
-      const epochLoss = this.neuralNetwork.calculateLoss(lossSamples);
-      this.appState.addLossValue(currentEpoch, epochLoss);
-    }
+    // Calculate epoch loss for every epoch
+    // Use only first 10 samples for quick loss calculation
+    const lossSamples = samples.slice(0, 10);
+    const epochLoss = this.neuralNetwork.calculateLoss(lossSamples);
+    this.appState.addLossValue(currentEpoch, epochLoss);
     
     // Get batch size from config
     const batchSize = this.appState.networkConfig.getValue().batchSize;
@@ -218,6 +222,12 @@ export class TrainingManager {
       // Train on each sample in the batch
       for (const sample of batch) {
         this.neuralNetwork.train(sample.input, sample.target);
+        
+        // Track sample loss for every single sample
+        const sampleLoss = this.neuralNetwork.calculateLoss([sample]);
+        this.appState.addSampleLoss(this.sampleCounter, sampleLoss);
+        
+        this.sampleCounter++;
       }
     }
     
