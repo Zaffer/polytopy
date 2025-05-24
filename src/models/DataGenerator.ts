@@ -1,6 +1,6 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { TrainingSample } from '../types/model';
+import { TrainingSample, PatternType } from '../types/model';
 
 /**
  * Class for generating and managing training data
@@ -12,9 +12,9 @@ export class DataManager {
   // Observable for the processed training samples
   private samples$: Observable<TrainingSample[]>;
   
-  constructor(width: number = 10, height: number = 10) {
-    // Initialize with randomly generated data
-    const initialData = this.generatePatternData(width, height);
+  constructor(width: number = 10, height: number = 10, patternType: PatternType = PatternType.RANDOM) {
+    // Initialize with pattern data
+    const initialData = this.generatePatternData(width, height, patternType);
     this.dataSubject = new BehaviorSubject<number[][]>(initialData);
     
     // Create derived observable for samples
@@ -47,28 +47,153 @@ export class DataManager {
   /**
    * Generate new data and update the observable
    */
-  public regenerateData(width: number, height: number): void {
-    const newData = this.generatePatternData(width, height);
+  public regenerateData(width: number, height: number, patternType: PatternType = PatternType.RANDOM): void {
+    const newData = this.generatePatternData(width, height, patternType);
     this.dataSubject.next(newData);
+  }
+
+  /**
+   * Set custom data directly (for drawing pad)
+   */
+  public setCustomData(data: number[][]): void {
+    // Create a deep copy to avoid reference issues
+    const dataCopy = data.map(row => [...row]);
+    this.dataSubject.next(dataCopy);
   }
   
   /**
-   * Generate a grid of binary data (0s and 1s)
+   * Generate a grid of binary data (0s and 1s) based on pattern type
    */
-  private generatePatternData(width: number, height: number): number[][] {
+  private generatePatternData(width: number, height: number, patternType: PatternType = PatternType.RANDOM): number[][] {
+    switch (patternType) {
+      case PatternType.RANDOM:
+        return this.generateRandomPattern(width, height);
+      case PatternType.CHECKERBOARD:
+        return this.generateCheckerboardPattern(width, height);
+      case PatternType.STRIPES_HORIZONTAL:
+        return this.generateHorizontalStripesPattern(width, height);
+      case PatternType.STRIPES_VERTICAL:
+        return this.generateVerticalStripesPattern(width, height);
+      case PatternType.CIRCLE:
+        return this.generateCirclePattern(width, height);
+      case PatternType.CORNERS:
+        return this.generateCornersPattern(width, height);
+      default:
+        return this.generateRandomPattern(width, height);
+    }
+  }
+
+  /**
+   * Generate random binary pattern
+   */
+  private generateRandomPattern(width: number, height: number): number[][] {
     const data: number[][] = [];
     
-    // Generate rows
     for (let i = 0; i < height; i++) {
       const row: number[] = [];
-      
-      // Generate values - random 1's and 0's
       for (let j = 0; j < width; j++) {
-        // Random binary value (0 or 1)
         const value = Math.random() > 0.5 ? 1 : 0;
         row.push(value);
       }
-      
+      data.push(row);
+    }
+    
+    return data;
+  }
+
+  /**
+   * Generate checkerboard pattern
+   */
+  private generateCheckerboardPattern(width: number, height: number): number[][] {
+    const data: number[][] = [];
+    
+    for (let i = 0; i < height; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < width; j++) {
+        const value = (i + j) % 2;
+        row.push(value);
+      }
+      data.push(row);
+    }
+    
+    return data;
+  }
+
+  /**
+   * Generate horizontal stripes pattern
+   */
+  private generateHorizontalStripesPattern(width: number, height: number): number[][] {
+    const data: number[][] = [];
+    
+    for (let i = 0; i < height; i++) {
+      const row: number[] = [];
+      const value = Math.floor(i / 2) % 2;
+      for (let j = 0; j < width; j++) {
+        row.push(value);
+      }
+      data.push(row);
+    }
+    
+    return data;
+  }
+
+  /**
+   * Generate vertical stripes pattern
+   */
+  private generateVerticalStripesPattern(width: number, height: number): number[][] {
+    const data: number[][] = [];
+    
+    for (let i = 0; i < height; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < width; j++) {
+        const value = Math.floor(j / 2) % 2;
+        row.push(value);
+      }
+      data.push(row);
+    }
+    
+    return data;
+  }
+
+  /**
+   * Generate circle pattern
+   */
+  private generateCirclePattern(width: number, height: number): number[][] {
+    const data: number[][] = [];
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 3;
+    
+    for (let i = 0; i < height; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < width; j++) {
+        const distance = Math.sqrt((j - centerX) ** 2 + (i - centerY) ** 2);
+        const value = distance <= radius ? 1 : 0;
+        row.push(value);
+      }
+      data.push(row);
+    }
+    
+    return data;
+  }
+
+  /**
+   * Generate corners pattern
+   */
+  private generateCornersPattern(width: number, height: number): number[][] {
+    const data: number[][] = [];
+    
+    for (let i = 0; i < height; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < width; j++) {
+        // Set corners to 1, everything else to 0
+        const isCorner = (i < 2 && j < 2) || 
+                        (i < 2 && j >= width - 2) || 
+                        (i >= height - 2 && j < 2) || 
+                        (i >= height - 2 && j >= width - 2);
+        const value = isCorner ? 1 : 0;
+        row.push(value);
+      }
       data.push(row);
     }
     

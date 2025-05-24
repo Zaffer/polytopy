@@ -4,6 +4,7 @@ import { PanelType } from '../types/scene';
 import { DataManager } from '../models/DataGenerator';
 import { TrainingManager } from '../models/TrainingManager';
 import { AppState } from '../utils/AppState';
+import { PatternType } from '../types/model';
 
 /**
  * AppController handles application logic and communication between components
@@ -19,8 +20,9 @@ export class AppController {
     this.sceneManager = sceneManager;
     this.appState = AppState.getInstance();
     
-    // Initialize data and training managers
-    this.dataManager = new DataManager(gridWidth, gridHeight);
+    // Initialize data and training managers with default pattern
+    const initialPattern = this.appState.trainingConfig.getValue().patternType;
+    this.dataManager = new DataManager(gridWidth, gridHeight, initialPattern);
     this.trainingManager = new TrainingManager(this.dataManager);
     
     // Subscribe to visualization options to update panel visibility
@@ -61,10 +63,12 @@ export class AppController {
   /**
    * Regenerate training data
    */
-  public regenerateData(width: number, height: number): void {
+  public regenerateData(width: number, height: number, patternType?: PatternType): void {
     // Only allow regenerating data if not currently training
     if (!this.appState.trainingConfig.getValue().isTraining) {
-      this.dataManager.regenerateData(width, height);
+      // Use current pattern type if not provided
+      const currentPatternType = patternType || this.appState.trainingConfig.getValue().patternType;
+      this.dataManager.regenerateData(width, height, currentPatternType);
       this.trainingManager.resetTraining();
     }
   }
@@ -152,6 +156,13 @@ export class AppController {
    */
   public resetCamera(): void {
     this.sceneManager.resetCamera();
+  }
+
+  /**
+   * Set custom data from drawing pad
+   */
+  public setCustomData(data: number[][]): void {
+    this.dataManager.setCustomData(data);
   }
   
   /**

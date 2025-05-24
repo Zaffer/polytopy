@@ -2,6 +2,7 @@ import { Subscription } from "rxjs";
 import { AppState } from "../../utils/AppState";
 import { AppController } from "../../core/AppController";
 import { PanelType } from "../../types/scene";
+import { PatternType } from "../../types/model";
 
 /**
  * UIManager class to handle reactive UI updates and user interactions
@@ -23,6 +24,9 @@ export class ControlManager {
     neuralNetworkCheckbox?: HTMLInputElement;
     predictionsCheckbox?: HTMLInputElement;
     polytopesCheckbox?: HTMLInputElement;
+    patternRadioButtons?: HTMLInputElement[];
+    drawingPad?: any; // DrawingPad instance
+    drawingPadContainer?: HTMLElement; // Container for showing/hiding
   } = {};
   
   // Training state callback
@@ -100,6 +104,19 @@ export class ControlManager {
         
         if (this.elements.updateIntervalSlider) {
           this.elements.updateIntervalSlider.value = config.updateInterval.toString();
+        }
+        
+        // Update pattern radio buttons
+        if (this.elements.patternRadioButtons) {
+          this.elements.patternRadioButtons.forEach(radio => {
+            radio.checked = radio.value === config.patternType;
+          });
+        }
+        
+        // Show/hide drawing pad based on pattern type
+        if (this.elements.drawingPadContainer) {
+          this.elements.drawingPadContainer.style.display = 
+            config.patternType === PatternType.DRAWING_PAD ? 'block' : 'none';
         }
       })
     );
@@ -218,6 +235,31 @@ export class ControlManager {
   }
   
   /**
+   * Register pattern radio buttons
+   */
+  public registerPatternRadioGroup(radioButtons: HTMLInputElement[]): void {
+    this.elements.patternRadioButtons = radioButtons;
+    
+    // Initialize with current pattern type
+    const currentPattern = this.appState.trainingConfig.getValue().patternType;
+    radioButtons.forEach(radio => {
+      radio.checked = radio.value === currentPattern;
+    });
+  }
+
+  /**
+   * Register drawing pad
+   */
+  public registerDrawingPad(drawingPad: any, container: HTMLElement): void {
+    this.elements.drawingPad = drawingPad;
+    this.elements.drawingPadContainer = container;
+    
+    // Initialize visibility based on current pattern type
+    const currentPattern = this.appState.trainingConfig.getValue().patternType;
+    container.style.display = currentPattern === PatternType.DRAWING_PAD ? 'block' : 'none';
+  }
+  
+  /**
    * Clean up subscriptions
    */
   public dispose(): void {
@@ -254,6 +296,22 @@ export class ControlManager {
     this.appController.regenerateData(width, height);
   }
   
+  public onPatternChange(patternType: PatternType): void {
+    // Update the training config to store the selected pattern
+    this.appState.updateTrainingConfig({ patternType });
+    
+    // Regenerate data with the new pattern
+    const config = this.appController.getDataManager().getCurrentData();
+    const width = config[0].length;
+    const height = config.length;
+    this.appController.regenerateData(width, height, patternType);
+  }
+
+  public onDrawingPadChange(data: number[][]): void {
+    // Directly set the custom data in the data manager
+    this.appController.setCustomData(data);
+  }
+
   public onLearningRateChange(value: number): void {
     this.appController.setLearningRate(value);
   }

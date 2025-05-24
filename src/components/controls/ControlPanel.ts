@@ -5,8 +5,11 @@ import {
   addButton,
   addSlider,
   addCheckbox,
-  addTextDisplay
+  addTextDisplay,
+  addRadioGroup,
+  addDrawingPad
 } from "./ControlElements";
+import { PatternType } from "../../types/model";
 
 export function setupControls(appController: AppController): HTMLElement {
   // Create UI controls
@@ -17,15 +20,11 @@ export function setupControls(appController: AppController): HTMLElement {
   
   // Add a title for the controls
   const title = document.createElement('h2');
-  title.textContent = 'Neural Network Controls';
-  title.style.color = 'black';
-  title.style.margin = '0 0 10px 0';
+  title.textContent = 'Polytopy Visualiser';
   controlsPanel.appendChild(title);
   
   // Status section
   const statusFieldset = document.createElement('fieldset');
-  statusFieldset.style.margin = '5px 0';
-  statusFieldset.style.padding = '8px';
   const statusLegend = document.createElement('legend');
   statusLegend.textContent = 'Training Status';
   statusFieldset.appendChild(statusLegend);
@@ -45,8 +44,6 @@ export function setupControls(appController: AppController): HTMLElement {
   
   // Training controls with emoji buttons
   const controlsFieldset = document.createElement('fieldset');
-  controlsFieldset.style.margin = '5px 0';
-  controlsFieldset.style.padding = '8px';
   const controlsLegend = document.createElement('legend');
   controlsLegend.textContent = 'Training Controls';
   controlsFieldset.appendChild(controlsLegend);
@@ -54,16 +51,11 @@ export function setupControls(appController: AppController): HTMLElement {
   
   // Training controls container
   const buttonContainer = document.createElement('div');
-  buttonContainer.style.display = 'grid';
-  buttonContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-  buttonContainer.style.gap = '5px';
   controlsFieldset.appendChild(buttonContainer);
   
   // Create a play/pause toggle button
   const playPauseButton = document.createElement('button');
   playPauseButton.textContent = "▶️  Play";
-  playPauseButton.style.margin = '2px';
-  playPauseButton.style.padding = '4px 8px';
   
   // Simple toggle implementation that directly checks the app state
   playPauseButton.addEventListener('click', () => {
@@ -90,8 +82,6 @@ export function setupControls(appController: AppController): HTMLElement {
   
   // Add parameter sliders
   const paramsFieldset = document.createElement('fieldset');
-  paramsFieldset.style.margin = '5px 0';
-  paramsFieldset.style.padding = '8px';
   const paramsLegend = document.createElement('legend');
   paramsLegend.textContent = 'Parameters';
   paramsFieldset.appendChild(paramsLegend);
@@ -120,24 +110,55 @@ export function setupControls(appController: AppController): HTMLElement {
     hiddenLayerSizeSlider,
     updateIntervalSlider
   );
-  
-  // Data and visualization controls
+   // Data and visualization controls
   const dataFieldset = document.createElement('fieldset');
-  dataFieldset.style.margin = '5px 0';
-  dataFieldset.style.padding = '8px';
   const dataLegend = document.createElement('legend');
   dataLegend.textContent = 'Data Controls';
   dataFieldset.appendChild(dataLegend);
   controlsPanel.appendChild(dataFieldset);
+
+  // Pattern selection radio buttons
+  const patternOptions = [
+    { id: PatternType.RANDOM, label: 'Random', checked: true },
+    { id: PatternType.CHECKERBOARD, label: 'Checkerboard' },
+    { id: PatternType.STRIPES_HORIZONTAL, label: 'Horizontal Stripes' },
+    { id: PatternType.STRIPES_VERTICAL, label: 'Vertical Stripes' },
+    { id: PatternType.CIRCLE, label: 'Circle' },
+    { id: PatternType.CORNERS, label: 'Corners' },
+    { id: PatternType.DRAWING_PAD, label: 'Drawing Pad' }
+  ];
+
+  const patternRadioGroup = addRadioGroup(dataFieldset, "Pattern Type", patternOptions, (selectedId) => {
+    uiManager.onPatternChange(selectedId as PatternType);
+    
+    // Show/hide drawing pad based on selection
+    if (selectedId === PatternType.DRAWING_PAD) {
+      drawingPadContainer.style.display = 'block';
+    } else {
+      drawingPadContainer.style.display = 'none';
+    }
+  });
+
+  // Register pattern radio group with UI manager
+  uiManager.registerPatternRadioGroup(patternRadioGroup.radioButtons);
+
+  // Add drawing pad (initially hidden)
+  const drawingPadResult = addDrawingPad(dataFieldset, 10, 10, (data) => {
+    uiManager.onDrawingPadChange(data);
+  });
   
+  const drawingPadContainer = drawingPadResult.container;
+  drawingPadContainer.style.display = 'none'; // Initially hidden
+
+  // Register drawing pad with UI manager
+  uiManager.registerDrawingPad(drawingPadResult.drawingPad, drawingPadContainer);
+
   addButton(dataFieldset, "🔄  Regenerate Data", () => {
     uiManager.onRegenerateData();
   });
   
   // Panel visibility checkboxes
   const visibilityFieldset = document.createElement('fieldset');
-  visibilityFieldset.style.margin = '5px 0';
-  visibilityFieldset.style.padding = '8px';
   const visibilityLegend = document.createElement('legend');
   visibilityLegend.textContent = 'Visibility Settings';
   visibilityFieldset.appendChild(visibilityLegend);
@@ -169,8 +190,6 @@ export function setupControls(appController: AppController): HTMLElement {
   
   // Camera controls
   const cameraFieldset = document.createElement('fieldset');
-  cameraFieldset.style.margin = '5px 0';
-  cameraFieldset.style.padding = '8px';
   const cameraLegend = document.createElement('legend');
   cameraLegend.textContent = 'Camera Controls';
   cameraFieldset.appendChild(cameraLegend);

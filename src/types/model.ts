@@ -1,3 +1,15 @@
+/**
+ * Types of data patterns that can be generated
+ */
+export enum PatternType {
+  RANDOM = 'random',
+  CHECKERBOARD = 'checkerboard',
+  STRIPES_HORIZONTAL = 'stripes_horizontal',
+  STRIPES_VERTICAL = 'stripes_vertical',
+  CIRCLE = 'circle',
+  CORNERS = 'corners',
+  DRAWING_PAD = 'drawing_pad'
+}
 
 /**
  * The type of training data for a specific cell
@@ -37,6 +49,7 @@ export interface TrainingConfig {
   currentEpoch: number;
   updateInterval: number;
   isTraining: boolean;
+  patternType: PatternType;
 }
 
 /**
@@ -68,6 +81,7 @@ export const DEFAULT_TRAINING_CONFIG: TrainingConfig = {
   currentEpoch: 0,
   updateInterval: 10,
   isTraining: false,
+  patternType: PatternType.RANDOM,
 };
 
 /**

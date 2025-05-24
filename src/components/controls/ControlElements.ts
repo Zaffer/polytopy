@@ -1,20 +1,15 @@
+import { DrawingPad } from './DrawingPad';
 
 // Create a simple UI panel for controls
 export function createControlsPanel(): HTMLElement {
-  // Create a section element for better semantics
+  // Create a section element for controls with minimal positioning
   const panel = document.createElement('section');
   
-  // Add minimal positioning to make controls visible
+  // Add only the essential positioning to make controls visible
   panel.style.position = 'absolute';
   panel.style.top = '10px';
   panel.style.left = '10px';
   panel.style.zIndex = '1000';
-  panel.style.backgroundColor = 'white';
-  panel.style.padding = '10px';
-  panel.style.border = '1px solid black';
-  panel.style.minWidth = '250px';
-  panel.style.maxHeight = '90vh';
-  panel.style.overflowY = 'auto';
   
   return panel;
 }
@@ -23,8 +18,6 @@ export function createControlsPanel(): HTMLElement {
 export function addButton(panel: HTMLElement, label: string, onClick: () => void): HTMLButtonElement {
   const button = document.createElement('button');
   button.textContent = label;
-  button.style.margin = '2px';
-  button.style.padding = '4px 8px';
   button.addEventListener('click', onClick);
   
   panel.appendChild(button);
@@ -42,17 +35,10 @@ export function addSlider(
   onChange: (value: number) => void
 ): HTMLInputElement {
   const container = document.createElement('div');
-  container.style.margin = '6px 0';
   
   const sliderId = `slider-${Math.random().toString(36).substring(2, 9)}`;
   
-  const labelElement = document.createElement('label');
-  labelElement.htmlFor = sliderId;
-  labelElement.textContent = `${label}: ${value}`;
-  labelElement.style.display = 'block';
-  labelElement.style.marginBottom = '3px';
-  container.appendChild(labelElement);
-  
+  // Create the slider element first
   const slider = document.createElement('input');
   slider.type = 'range';
   slider.min = min.toString();
@@ -60,7 +46,15 @@ export function addSlider(
   slider.step = step.toString();
   slider.value = value.toString();
   slider.id = sliderId;
-  slider.style.width = '100%';
+  
+  // Put the slider first in the container
+  container.appendChild(slider);
+  
+  // Create the label element and place it after the slider
+  const labelElement = document.createElement('label');
+  labelElement.htmlFor = sliderId;
+  labelElement.textContent = `${label}: ${value}`;
+  container.appendChild(labelElement);
   
   slider.addEventListener('input', () => {
     const newValue = parseFloat(slider.value);
@@ -68,7 +62,6 @@ export function addSlider(
     onChange(newValue);
   });
   
-  container.appendChild(slider);
   panel.appendChild(container);
   return slider;
 }
@@ -81,7 +74,6 @@ export function addCheckbox(
   onChange: (checked: boolean) => void
 ): HTMLInputElement {
   const container = document.createElement('div');
-  container.style.margin = '4px 0';
   
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
@@ -91,7 +83,6 @@ export function addCheckbox(
   const labelElement = document.createElement('label');
   labelElement.htmlFor = checkbox.id;
   labelElement.textContent = label;
-  labelElement.style.marginLeft = '4px';
   
   checkbox.addEventListener('change', () => {
     onChange(checkbox.checked);
@@ -111,12 +102,9 @@ export function addRadioGroup(
   onChange: (selectedId: string) => void
 ): { radioGroup: HTMLElement, radioButtons: HTMLInputElement[] } {
   const container = document.createElement('div');
-  container.style.margin = '6px 0';
   
   const labelElement = document.createElement('label');
   labelElement.textContent = label;
-  labelElement.style.display = 'block';
-  labelElement.style.marginBottom = '4px';
   container.appendChild(labelElement);
   
   const radioGroup = document.createElement('div');
@@ -128,18 +116,17 @@ export function addRadioGroup(
   
   options.forEach(option => {
     const radioContainer = document.createElement('div');
-    radioContainer.style.margin = '3px 0';
     
     const radio = document.createElement('input');
     radio.type = 'radio';
     radio.id = option.id;
     radio.name = groupName;
+    radio.value = option.id;  // Set value to the option id
     radio.checked = option.checked || false;
     
     const radioLabel = document.createElement('label');
     radioLabel.htmlFor = option.id;
     radioLabel.textContent = option.label;
-    radioLabel.style.marginLeft = '4px';
     
     radio.addEventListener('change', () => {
       if (radio.checked) {
@@ -163,9 +150,6 @@ export function addRadioGroup(
 // Add a separator line
 export function addSeparator(panel: HTMLElement): void {
   const separator = document.createElement('hr');
-  separator.style.margin = '10px 0';
-  separator.style.borderTop = '1px solid #ddd';
-  separator.style.borderBottom = 'none';
   panel.appendChild(separator);
 }
 
@@ -176,14 +160,11 @@ export function addTextDisplay(panel: HTMLElement, label: string): {
   update: (text: string) => void 
 } {
   const container = document.createElement('div');
-  container.style.margin = '5px 0';
   
   const labelElement = document.createElement('label');
   labelElement.textContent = `${label}: `;
-  labelElement.style.fontWeight = 'normal';
   
   const valueElement = document.createElement('span');
-  valueElement.style.fontWeight = 'bold';
   
   container.appendChild(labelElement);
   container.appendChild(valueElement);
@@ -195,5 +176,61 @@ export function addTextDisplay(panel: HTMLElement, label: string): {
     update: (text: string) => {
       valueElement.textContent = text;
     }
+  };
+}
+
+// Add a drawing pad canvas
+export function addDrawingPad(
+  panel: HTMLElement,
+  width: number = 10,
+  height: number = 10,
+  onDataChange?: (data: number[][]) => void
+): { 
+  container: HTMLElement, 
+  drawingPad: any, // We'll import DrawingPad type later
+  clearButton: HTMLButtonElement,
+  fillButton: HTMLButtonElement
+} {
+  const container = document.createElement('div');
+  
+  // Import and create drawing pad
+  const drawingPad = new DrawingPad(width, height, 200, onDataChange);
+  
+  // Add canvas to container
+  container.appendChild(drawingPad.getCanvas());
+  
+  // Create control buttons
+  const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.gap = '5px';
+  buttonContainer.style.marginTop = '5px';
+  
+  const clearButton = document.createElement('button');
+  clearButton.textContent = '🗑️ Clear';
+  clearButton.addEventListener('click', () => drawingPad.clear());
+  
+  const fillButton = document.createElement('button');
+  fillButton.textContent = '⬛ Fill';
+  fillButton.addEventListener('click', () => drawingPad.fill());
+  
+  buttonContainer.appendChild(clearButton);
+  buttonContainer.appendChild(fillButton);
+  container.appendChild(buttonContainer);
+  
+  // Add instructions
+  const instructions = document.createElement('small');
+  instructions.textContent = 'Left click to draw, right click to erase';
+  instructions.style.display = 'block';
+  instructions.style.marginTop = '5px';
+  instructions.style.color = '#666';
+  container.appendChild(instructions);
+  
+  panel.appendChild(container);
+  
+  return {
+    container,
+    drawingPad,
+    clearButton,
+    fillButton
   };
 }
