@@ -21,6 +21,7 @@ export class AppState {
   public visualizationOptions = new BehaviorSubject<VisualizationOptions>(DEFAULT_VISUALIZATION_OPTIONS);
   public accuracy = new BehaviorSubject<number>(0);
   public status = new BehaviorSubject<string>('Ready');
+  public lossHistory = new BehaviorSubject<Array<{epoch: number, loss: number}>>([]);
 
   private constructor() {}
 
@@ -92,6 +93,22 @@ export class AppState {
   }
 
   /**
+   * Add a loss value to the history
+   */
+  public addLossValue(epoch: number, loss: number): void {
+    const currentHistory = this.lossHistory.getValue();
+    const newHistory = [...currentHistory, { epoch, loss }];
+    this.lossHistory.next(newHistory);
+  }
+
+  /**
+   * Clear loss history
+   */
+  public clearLossHistory(): void {
+    this.lossHistory.next([]);
+  }
+
+  /**
    * Reset application state
    */
   public reset(): void {
@@ -102,5 +119,6 @@ export class AppState {
     });
     this.accuracy.next(0);
     this.status.next('Reset');
+    this.clearLossHistory();
   }
 }

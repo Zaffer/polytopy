@@ -1,6 +1,7 @@
 import { SceneManager } from "./core/SceneManager";
 import { AppController } from "./core/AppController";
 import { VisualizationManager } from "./visualizations/VisualizationManager";
+import { LossChart } from "./components/LossChart";
 import { DEFAULT_SCENE_CONFIG } from "./types/scene";
 import { setupControls } from "./components/controls";
 
@@ -11,6 +12,7 @@ export class Application {
   private sceneManager: SceneManager;
   private appController: AppController;
   private visualizationManager: VisualizationManager;
+  private lossChart: LossChart | null = null;
   
   constructor() {
     // Initialize components
@@ -49,6 +51,9 @@ export class Application {
     // Create UI controls
     const controlsPanel = this.setupControls();
     
+    // Initialize loss chart
+    this.lossChart = new LossChart();
+    
     // Start the animation loop
     this.sceneManager.startAnimationLoop();
     
@@ -85,5 +90,8 @@ export class Application {
   public dispose(): void {
     this.appController.dispose();
     this.sceneManager.dispose();
+    if (this.lossChart) {
+      this.lossChart.destroy();
+    }
   }
 }

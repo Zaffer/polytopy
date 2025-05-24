@@ -17,11 +17,7 @@ export function setupControls(appController: AppController): HTMLElement {
   
   // Create UI manager to handle reactive updates
   const uiManager = new ControlManager(appController);
-  
-  // Add a title for the controls
-  const title = document.createElement('h2');
-  title.textContent = 'Polytopy Visualiser';
-  controlsPanel.appendChild(title);
+
   
   // Status section
   const statusFieldset = document.createElement('fieldset');
@@ -53,61 +49,99 @@ export function setupControls(appController: AppController): HTMLElement {
   const buttonContainer = document.createElement('div');
   controlsFieldset.appendChild(buttonContainer);
   
-  // Create a play/pause toggle button
-  const playPauseButton = document.createElement('button');
-  playPauseButton.textContent = "▶️  Play";
+  // Create single training control button
+  const trainingButton = document.createElement('button');
+  trainingButton.textContent = "▶️  Train";
   
-  // Simple toggle implementation that directly checks the app state
-  playPauseButton.addEventListener('click', () => {
-    const currentState = appController.getAppState();
-    if (currentState.trainingConfig.getValue().isTraining) {
-      // If training, then stop
+  // Track if training has started (to distinguish between initial Train and Resume)
+  let hasStartedTraining = false;
+  
+  trainingButton.addEventListener('click', () => {
+    const currentState = appController.getAppState().trainingConfig.getValue();
+    const currentStatus = appController.getAppState().status.getValue();
+    
+    if (currentStatus === "Complete") {
+      // If completed, reset
+      uiManager.onResetNetwork();
+      hasStartedTraining = false;
+    } else if (currentState.isTraining) {
+      // If training, pause it
       uiManager.onStopTraining();
     } else {
-      // If not training, then start
+      // If not training, start or resume it
       uiManager.onStartTraining();
+      hasStartedTraining = true;
     }
   });
   
-  // Subscribe to app state changes to update button text
+  // Subscribe to app state changes to update button
   appController.getAppState().trainingConfig.subscribe(config => {
-    playPauseButton.textContent = config.isTraining ? "⏸️  Pause" : "▶️  Play";
+    const currentStatus = appController.getAppState().status.getValue();
+    
+    if (currentStatus === "Complete") {
+      trainingButton.textContent = "⏮️  Reset";
+    } else if (config.isTraining) {
+      trainingButton.textContent = "⏸️  Pause";
+    } else if (hasStartedTraining && config.currentEpoch > 0) {
+      trainingButton.textContent = "⏯️  Resume";
+    } else {
+      trainingButton.textContent = "▶️  Train";
+      hasStartedTraining = false; // Reset flag when starting fresh
+    }
   });
   
-  buttonContainer.appendChild(playPauseButton);
-  
-  addButton(buttonContainer, "🔄  Reset", () => {
-    uiManager.onResetNetwork();
+  // Also subscribe to status changes to handle completion
+  appController.getAppState().status.subscribe(status => {
+    if (status === "Complete") {
+      trainingButton.textContent = "⏮️  Reset";
+    } else if (status === "Reset") {
+      trainingButton.textContent = "▶️  Train";
+      hasStartedTraining = false;
+    }
   });
   
+  buttonContainer.appendChild(trainingButton);
+  
+  // Add network architecture sliders
+  const architectureFieldset = document.createElement('fieldset');
+  const architectureLegend = document.createElement('legend');
+  architectureLegend.textContent = 'Network Architecture';
+  architectureFieldset.appendChild(architectureLegend);
+  controlsPanel.appendChild(architectureFieldset);
+  
+  const networkDepthSlider = addSlider(architectureFieldset, "Network Depth", 1, 5, 2, 1, (value) => {
+    uiManager.onNetworkDepthChange(value);
+  });
+  
+  const hiddenLayerSizeSlider = addSlider(architectureFieldset, "Hidden Layer Size", 2, 20, 8, 1, (value) => {
+    uiManager.onHiddenLayerSizeChange(value);
+  });
+
   // Add parameter sliders
   const paramsFieldset = document.createElement('fieldset');
   const paramsLegend = document.createElement('legend');
-  paramsLegend.textContent = 'Parameters';
+  paramsLegend.textContent = 'Training Parameters';
   paramsFieldset.appendChild(paramsLegend);
   controlsPanel.appendChild(paramsFieldset);
+  
+  const epochsSlider = addSlider(paramsFieldset, "Epochs", 10, 1000, 500, 10, (value) => {
+    uiManager.onEpochsChange(value);
+  });
   
   const learningRateSlider = addSlider(paramsFieldset, "Learning Rate", 0.001, 0.1, 0.05, 0.001, (value) => {
     uiManager.onLearningRateChange(value);
   });
   
-  const epochsSlider = addSlider(paramsFieldset, "Epochs", 10, 500, 100, 10, (value) => {
-    uiManager.onEpochsChange(value);
-  });
-  
-  const hiddenLayerSizeSlider = addSlider(paramsFieldset, "Hidden Layer Size", 2, 20, 8, 1, (value) => {
-    uiManager.onHiddenLayerSizeChange(value);
-  });
-  
   const updateIntervalSlider = addSlider(paramsFieldset, "Update Interval", 1, 50, 10, 1, (value) => {
     uiManager.onUpdateIntervalChange(value);
   });
-  
+
   // Register sliders with the UI manager
   uiManager.registerSliders(
     learningRateSlider,
     epochsSlider,
     hiddenLayerSizeSlider,
+    networkDepthSlider,
     updateIntervalSlider
   );
    // Data and visualization controls
@@ -128,8 +162,13 @@ export function setupControls(appController: AppController): HTMLElement {
     { id: PatternType.DRAWING_PAD, label: 'Drawing Pad' }
   ];
 
-  const patternRadioGroup = addRadioGroup(dataFieldset, "Pattern Type", patternOptions, (selectedId) => {
-    uiManager.onPatternChange(selectedId as PatternType);
+  const patternRadioGroup = addRadioGroup(dataFieldset, patternOptions, (selectedId) => {
+    // Handle Random pattern specially - always regenerate when clicked
+    if (selectedId === PatternType.RANDOM) {
+      uiManager.onRandomPatternClick();
+    } else {
+      uiManager.onPatternChange(selectedId as PatternType);
+    }
     
     // Show/hide drawing pad based on selection
     if (selectedId === PatternType.DRAWING_PAD) {
@@ -153,10 +192,6 @@ export function setupControls(appController: AppController): HTMLElement {
   // Register drawing pad with UI manager
   uiManager.registerDrawingPad(drawingPadResult.drawingPad, drawingPadContainer);
 
-  addButton(dataFieldset, "🔄  Regenerate Data", () => {
-    uiManager.onRegenerateData();
-  });
-  
   // Panel visibility checkboxes
   const visibilityFieldset = document.createElement('fieldset');
   const visibilityLegend = document.createElement('legend');

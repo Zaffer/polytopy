@@ -65,6 +65,12 @@ export class TrainingManager {
     // Create a fresh Subject for stop signal
     this.stopTraining$ = new Subject<void>();
     
+    // Only clear loss history if starting from epoch 0 (fresh start)
+    const currentEpoch = this.appState.trainingConfig.getValue().currentEpoch;
+    if (currentEpoch === 0) {
+      this.appState.clearLossHistory();
+    }
+    
     // Update state
     this.appState.updateTrainingConfig({ isTraining: true });
     this.appState.setStatus("Training...");
@@ -111,6 +117,9 @@ export class TrainingManager {
     
     // Create a new neural network
     this.neuralNetwork = this.appState.createNeuralNetwork();
+    
+    // Clear loss history
+    this.appState.clearLossHistory();
     
     // Reset predictions
     this.updatePredictions();
@@ -187,6 +196,16 @@ export class TrainingManager {
         resolve(samples);
       });
     });
+    
+    const currentEpoch = this.appState.trainingConfig.getValue().currentEpoch;
+    
+    // Calculate loss much less frequently and with fewer samples for performance
+    if (currentEpoch % 20 === 0) {
+      // Use only first 10 samples for quick loss calculation
+      const lossSamples = samples.slice(0, 10);
+      const epochLoss = this.neuralNetwork.calculateLoss(lossSamples);
+      this.appState.addLossValue(currentEpoch, epochLoss);
+    }
     
     // Get batch size from config
     const batchSize = this.appState.networkConfig.getValue().batchSize;

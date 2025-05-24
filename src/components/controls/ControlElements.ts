@@ -47,14 +47,18 @@ export function addSlider(
   slider.value = value.toString();
   slider.id = sliderId;
   
-  // Put the slider first in the container
-  container.appendChild(slider);
-  
   // Create the label element and place it after the slider
   const labelElement = document.createElement('label');
   labelElement.htmlFor = sliderId;
   labelElement.textContent = `${label}: ${value}`;
   container.appendChild(labelElement);
+
+  container.appendChild(document.createElement('br'));
+
+
+  // Put the slider first in the container
+  container.appendChild(slider);
+  
   
   slider.addEventListener('input', () => {
     const newValue = parseFloat(slider.value);
@@ -97,15 +101,10 @@ export function addCheckbox(
 // Add a group of radio buttons
 export function addRadioGroup(
   panel: HTMLElement,
-  label: string,
   options: Array<{ id: string, label: string, checked?: boolean }>,
   onChange: (selectedId: string) => void
 ): { radioGroup: HTMLElement, radioButtons: HTMLInputElement[] } {
   const container = document.createElement('div');
-  
-  const labelElement = document.createElement('label');
-  labelElement.textContent = label;
-  container.appendChild(labelElement);
   
   const radioGroup = document.createElement('div');
   
@@ -129,6 +128,13 @@ export function addRadioGroup(
     radioLabel.textContent = option.label;
     
     radio.addEventListener('change', () => {
+      if (radio.checked) {
+        onChange(option.id);
+      }
+    });
+    
+    // Special handling for clicks on already selected radio buttons
+    radio.addEventListener('click', () => {
       if (radio.checked) {
         onChange(option.id);
       }

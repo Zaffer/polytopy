@@ -135,8 +135,74 @@ export class SceneManager {
       this.scene.remove(oldGroup);
       this.scene.add(newGroup);
       this.panels.set(name, newGroup);
+      
+      // Reposition panels that come after this one
+      this.repositionPanelsAfter(name);
     } else {
       this.addPanel(name, newGroup);
+    }
+  }
+
+  /**
+   * Reposition all panels that come after the specified panel
+   */
+  private repositionPanelsAfter(changedPanelName: PanelType): void {
+    const panelOrder = [
+      PanelType.TRAINING_DATA,
+      PanelType.NEURAL_NETWORK,
+      PanelType.PREDICTIONS,
+      PanelType.POLYTOPES
+    ];
+
+    const changedPanelIndex = panelOrder.indexOf(changedPanelName);
+    if (changedPanelIndex === -1 || changedPanelIndex === panelOrder.length - 1) {
+      return; // No panels after this one
+    }
+
+    // Calculate new positions for panels that come after the changed panel
+    let currentDepth = 0;
+    
+    for (let i = 0; i <= changedPanelIndex; i++) {
+      const panelType = panelOrder[i];
+      const panel = this.panels.get(panelType);
+      
+      if (panel) {
+        if (i === 0) {
+          // First panel stays at z=0
+          currentDepth = 0;
+        } else {
+          // Calculate position based on previous panel
+          const prevPanelType = panelOrder[i - 1];
+          const prevPanel = this.panels.get(prevPanelType);
+          
+          if (prevPanel) {
+            const boundingBox = new THREE.Box3().setFromObject(prevPanel);
+            const depth = boundingBox.max.z - boundingBox.min.z;
+            currentDepth = prevPanel.position.z - depth - this.config.panelSpacing;
+          }
+        }
+        
+        panel.position.z = currentDepth;
+      }
+    }
+
+    // Now reposition the panels that come after the changed panel
+    for (let i = changedPanelIndex + 1; i < panelOrder.length; i++) {
+      const panelType = panelOrder[i];
+      const panel = this.panels.get(panelType);
+      
+      if (panel) {
+        // Calculate position based on previous panel
+        const prevPanelType = panelOrder[i - 1];
+        const prevPanel = this.panels.get(prevPanelType);
+        
+        if (prevPanel) {
+          const boundingBox = new THREE.Box3().setFromObject(prevPanel);
+          const depth = boundingBox.max.z - boundingBox.min.z;
+          currentDepth = prevPanel.position.z - depth - this.config.panelSpacing;
+          panel.position.z = currentDepth;
+        }
+      }
     }
   }
   

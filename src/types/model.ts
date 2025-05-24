@@ -77,7 +77,7 @@ export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
  * Default training configuration
  */
 export const DEFAULT_TRAINING_CONFIG: TrainingConfig = {
-  epochs: 100,
+  epochs: 500,
   currentEpoch: 0,
   updateInterval: 10,
   isTraining: false,

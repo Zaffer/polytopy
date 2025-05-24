@@ -38,7 +38,12 @@ The application initializes a 3D scene for machine learning visualizations using
 
 ### Architecture Overview
 
-This project implements a 3D neural network visualization and training system using TypeScript, THREE.js with WebGPU, and reactive programming with RxJS. The architecture follows a modular design with clear separation of concerns:
+This project implements a 3D neural network visualization and training system using TypeScript, THREE.js with WebGPU, and reactive programming with RxJS. The architecture follows a modular design with clear separation of concerns.
+
+### Visualisation Design
+
+- the visualisation are seperated out into thier own "panels"
+- each panel allows you to see a different compenent or idea in the machine learning system
 
 ### Core Components
 

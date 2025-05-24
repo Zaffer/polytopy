@@ -111,7 +111,22 @@ export class AppController {
    * Update hidden layer size
    */
   public setHiddenLayerSize(value: number): void {
-    this.appState.updateNetworkConfig({ hiddenSizes: [Math.round(value), Math.round(value)] });
+    const currentConfig = this.appState.networkConfig.getValue();
+    const depth = currentConfig.hiddenSizes.length;
+    const newSize = Math.round(value);
+    const newHiddenSizes = Array(depth).fill(newSize);
+    this.appState.updateNetworkConfig({ hiddenSizes: newHiddenSizes });
+  }
+
+  /**
+   * Update network depth (number of hidden layers)
+   */
+  public setNetworkDepth(value: number): void {
+    const currentConfig = this.appState.networkConfig.getValue();
+    const currentSize = currentConfig.hiddenSizes[0] || 8; // Use current size or default to 8
+    const newDepth = Math.round(value);
+    const newHiddenSizes = Array(newDepth).fill(currentSize);
+    this.appState.updateNetworkConfig({ hiddenSizes: newHiddenSizes });
   }
   
   /**

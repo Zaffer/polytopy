@@ -195,4 +195,36 @@ export class SimpleNeuralNetwork {
       layerInput = layerIdx < activations.length ? activations[layerIdx] : output;
     }
   }
+
+  /**
+   * Calculate loss (mean squared error) for a set of samples
+   */
+  public calculateLoss(samples: Array<{input: number[], target: number[]}>): number {
+    if (!samples || samples.length === 0) {
+      return 0;
+    }
+    
+    let totalLoss = 0;
+    let validSamples = 0;
+    
+    for (const sample of samples) {
+      try {
+        const { output } = this.forward(sample.input);
+        
+        // Calculate mean squared error for this sample
+        let sampleLoss = 0;
+        for (let i = 0; i < sample.target.length && i < output.length; i++) {
+          const error = sample.target[i] - output[i];
+          sampleLoss += error * error;
+        }
+        
+        totalLoss += sampleLoss / sample.target.length;
+        validSamples++;
+      } catch (e) {
+        console.error("Error calculating loss for sample:", e);
+      }
+    }
+    
+    return validSamples > 0 ? totalLoss / validSamples : 0;
+  }
 }

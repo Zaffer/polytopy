@@ -19,6 +19,7 @@ export class ControlManager {
     learningRateSlider?: HTMLInputElement;
     epochsSlider?: HTMLInputElement;
     hiddenLayerSizeSlider?: HTMLInputElement;
+    networkDepthSlider?: HTMLInputElement;
     updateIntervalSlider?: HTMLInputElement;
     trainingDataCheckbox?: HTMLInputElement;
     neuralNetworkCheckbox?: HTMLInputElement;
@@ -90,6 +91,10 @@ export class ControlManager {
         
         if (this.elements.hiddenLayerSizeSlider) {
           this.elements.hiddenLayerSizeSlider.value = config.hiddenSizes[0].toString();
+        }
+
+        if (this.elements.networkDepthSlider) {
+          this.elements.networkDepthSlider.value = config.hiddenSizes.length.toString();
         }
       })
     );
@@ -194,11 +199,13 @@ export class ControlManager {
     learningRateSlider: HTMLInputElement,
     epochsSlider: HTMLInputElement,
     hiddenLayerSizeSlider: HTMLInputElement,
+    networkDepthSlider: HTMLInputElement,
     updateIntervalSlider: HTMLInputElement
   ): void {
     this.elements.learningRateSlider = learningRateSlider;
     this.elements.epochsSlider = epochsSlider;
     this.elements.hiddenLayerSizeSlider = hiddenLayerSizeSlider;
+    this.elements.networkDepthSlider = networkDepthSlider;
     this.elements.updateIntervalSlider = updateIntervalSlider;
     
     // Initialize with current values
@@ -208,6 +215,7 @@ export class ControlManager {
     learningRateSlider.value = networkConfig.learningRate.toString();
     epochsSlider.value = trainingConfig.epochs.toString();
     hiddenLayerSizeSlider.value = networkConfig.hiddenSizes[0].toString();
+    networkDepthSlider.value = networkConfig.hiddenSizes.length.toString();
     updateIntervalSlider.value = trainingConfig.updateInterval.toString();
   }
   
@@ -288,23 +296,26 @@ export class ControlManager {
     this.appController.resetNetwork();
     this.notifyTrainingStateChange(false);
   }
-  
-  public onRegenerateData(): void {
-    const config = this.appController.getDataManager().getCurrentData();
-    const width = config[0].length;
-    const height = config.length;
-    this.appController.regenerateData(width, height);
-  }
-  
+
   public onPatternChange(patternType: PatternType): void {
     // Update the training config to store the selected pattern
     this.appState.updateTrainingConfig({ patternType });
+    
+    // For drawing pad, don't regenerate - let user draw their own pattern
+    if (patternType === PatternType.DRAWING_PAD) {
+      return;
+    }
     
     // Regenerate data with the new pattern
     const config = this.appController.getDataManager().getCurrentData();
     const width = config[0].length;
     const height = config.length;
     this.appController.regenerateData(width, height, patternType);
+  }
+
+  public onRandomPatternClick(): void {
+    // Always regenerate when Random is clicked
+    this.onPatternChange(PatternType.RANDOM);
   }
 
   public onDrawingPadChange(data: number[][]): void {
@@ -322,6 +333,10 @@ export class ControlManager {
   
   public onHiddenLayerSizeChange(value: number): void {
     this.appController.setHiddenLayerSize(value);
+  }
+
+  public onNetworkDepthChange(value: number): void {
+    this.appController.setNetworkDepth(value);
   }
   
   public onUpdateIntervalChange(value: number): void {
