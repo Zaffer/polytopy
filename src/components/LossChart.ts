@@ -7,6 +7,7 @@ export class LossChart {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private container: HTMLFieldSetElement;
+  private lastRedrawTime: number = 0;
   
   constructor() {
     // Create fieldset container
@@ -19,25 +20,16 @@ export class LossChart {
       background: rgba(0, 0, 0, 0.8);
     `;
     
-    // Create legend
+    // Create legend with loss and accuracy display
     const legend = document.createElement('legend');
-    legend.textContent = 'Training Loss';
+    legend.id = 'lossDisplay';
+
     legend.style.cssText = `
-      color: white;
-      font-size: 12px;
-    `;
-    this.container.appendChild(legend);
-    
-    // Create loss value display
-    const lossDisplay = document.createElement('div');
-    lossDisplay.id = 'lossDisplay';
-    lossDisplay.style.cssText = `
-      color: white;
-      font-size: 10px;
-      margin: 5px;
       font-family: monospace;
     `;
-    this.container.appendChild(lossDisplay);
+
+    legend.textContent = 'Training Loss';
+    this.container.appendChild(legend);
     
     // Create canvas
     this.canvas = document.createElement('canvas');
@@ -58,14 +50,22 @@ export class LossChart {
       this.redrawChart();
     });
     
-    // Subscribe to both loss histories
+    // Subscribe to both loss histories with throttling
     AppState.getInstance().lossHistory.subscribe(() => {
-      this.redrawChart();
+      this.throttledRedraw();
     });
     
     AppState.getInstance().sampleLossHistory.subscribe(() => {
-      this.redrawChart();
+      this.throttledRedraw();
     });
+  }
+  
+  private throttledRedraw(): void {
+    const now = Date.now();
+    if (now - this.lastRedrawTime > 100) { // 100ms throttle
+      this.lastRedrawTime = now;
+      this.redrawChart();
+    }
   }
   
   private redrawChart(): void {
@@ -134,8 +134,9 @@ export class LossChart {
       const currentSampleLoss = sampleData.length > 0 ? sampleData[sampleData.length - 1].loss : 0;
       const currentEpochLoss = epochData.length > 0 ? epochData[epochData.length - 1].loss : 0;
       const currentEpoch = epochData.length > 0 ? epochData[epochData.length - 1].epoch : 0;
+      const currentAccuracy = AppState.getInstance().accuracy.getValue();
       
-      lossDisplay.textContent = `Sample Loss: ${currentSampleLoss.toFixed(4)} | Epoch Loss: ${currentEpochLoss.toFixed(4)} | Epoch: ${currentEpoch}`;
+      lossDisplay.textContent = `Epoch: ${currentEpoch} | Accuracy: ${(currentAccuracy * 100).toFixed(1)}% | Sample Loss: ${currentSampleLoss.toFixed(4)} | Epoch Loss: ${currentEpochLoss.toFixed(4)}`;
     }
   }
   

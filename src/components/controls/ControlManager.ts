@@ -13,9 +13,6 @@ export class ControlManager {
   
   // UI elements that need updates
   private elements: {
-    trainingStatus?: HTMLElement;
-    epochDisplay?: HTMLElement;
-    accuracyDisplay?: HTMLElement;
     learningRateSlider?: HTMLInputElement;
     epochsSlider?: HTMLInputElement;
     hiddenLayerSizeSlider?: HTMLInputElement;
@@ -51,36 +48,6 @@ export class ControlManager {
    * Set up subscriptions to app state changes
    */
   private setupStateSubscriptions(): void {
-    // Training status subscription
-    this.subscriptions.push(
-      this.appState.status.subscribe(status => {
-        if (this.elements.trainingStatus) {
-          this.elements.trainingStatus.textContent = status;
-        }
-      })
-    );
-    
-    // Current epoch subscription
-    this.subscriptions.push(
-      this.appState.trainingConfig.subscribe(config => {
-        if (this.elements.epochDisplay) {
-          this.elements.epochDisplay.textContent = config.currentEpoch.toString();
-        }
-        
-        // Notify training state subscribers when the state changes
-        this.notifyTrainingStateChange(config.isTraining);
-      })
-    );
-    
-    // Accuracy subscription
-    this.subscriptions.push(
-      this.appState.accuracy.subscribe(accuracy => {
-        if (this.elements.accuracyDisplay) {
-          this.elements.accuracyDisplay.textContent = `${(accuracy * 100).toFixed(1)}%`;
-        }
-      })
-    );
-    
     // Network config subscription
     this.subscriptions.push(
       this.appState.networkConfig.subscribe(config => {
@@ -123,6 +90,9 @@ export class ControlManager {
           this.elements.drawingPadContainer.style.display = 
             config.patternType === PatternType.DRAWING_PAD ? 'block' : 'none';
         }
+        
+        // Notify training state subscribers when the state changes
+        this.notifyTrainingStateChange(config.isTraining);
       })
     );
     
@@ -173,26 +143,7 @@ export class ControlManager {
     // Notify all subscribers
     this.trainingStateCallbacks.forEach(callback => callback(isTraining));
   }
-  
-  /**
-   * Register UI elements for status updates
-   */
-  public registerStatusElements(
-    trainingStatus: HTMLElement,
-    epochDisplay: HTMLElement,
-    accuracyDisplay: HTMLElement
-  ): void {
-    this.elements.trainingStatus = trainingStatus;
-    this.elements.epochDisplay = epochDisplay;
-    this.elements.accuracyDisplay = accuracyDisplay;
-    
-    // Initialize with current values
-    trainingStatus.textContent = this.appState.status.getValue();
-    epochDisplay.textContent = this.appState.trainingConfig.getValue().currentEpoch.toString();
-    accuracyDisplay.textContent = `${(this.appState.accuracy.getValue() * 100).toFixed(1)}%`;
-  }
-  
-  /**
+   /**
    * Register slider controls
    */
   public registerSliders(

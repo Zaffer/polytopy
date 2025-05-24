@@ -37,7 +37,7 @@ export const DEFAULT_SCENE_CONFIG: SceneConfig = {
     fov: 25,
     near: 0.1,
     far: 1000,
-    initialPosition: new THREE.Vector3(45, 45, 45)
+    initialPosition: new THREE.Vector3(25, 25, 25)
   },
   renderer: {
     backgroundColor: 0x1a1a1a,

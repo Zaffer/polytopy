@@ -81,7 +81,7 @@ export const DEFAULT_TRAINING_CONFIG: TrainingConfig = {
   currentEpoch: 0,
   updateInterval: 10,
   isTraining: false,
-  patternType: PatternType.RANDOM,
+  patternType: PatternType.CIRCLE,
 };
 
 /**
@@ -91,5 +91,5 @@ export const DEFAULT_VISUALIZATION_OPTIONS: VisualizationOptions = {
   showTrainingData: true,
   showNeuralNetwork: true,
   showPredictions: true,
-  showPolytopes: true,
+  showPolytopes: false,
 };

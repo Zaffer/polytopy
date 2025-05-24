@@ -205,10 +205,8 @@ export class TrainingManager {
     
     const currentEpoch = this.appState.trainingConfig.getValue().currentEpoch;
     
-    // Calculate epoch loss for every epoch
-    // Use only first 10 samples for quick loss calculation
-    const lossSamples = samples.slice(0, 10);
-    const epochLoss = this.neuralNetwork.calculateLoss(lossSamples);
+    // Calculate epoch loss using all samples for accuracy
+    const epochLoss = this.neuralNetwork.calculateLoss(samples);
     this.appState.addLossValue(currentEpoch, epochLoss);
     
     // Get batch size from config

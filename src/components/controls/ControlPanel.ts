@@ -2,10 +2,8 @@ import { AppController } from "../../core/AppController";
 import { ControlManager } from "./ControlManager";
 import {
   createControlsPanel,
-  addButton,
   addSlider,
   addCheckbox,
-  addTextDisplay,
   addRadioGroup,
   addDrawingPad
 } from "./ControlElements";
@@ -18,26 +16,6 @@ export function setupControls(appController: AppController): HTMLElement {
   // Create UI manager to handle reactive updates
   const uiManager = new ControlManager(appController);
 
-  
-  // Status section
-  const statusFieldset = document.createElement('fieldset');
-  const statusLegend = document.createElement('legend');
-  statusLegend.textContent = 'Training Status';
-  statusFieldset.appendChild(statusLegend);
-  controlsPanel.appendChild(statusFieldset);
-  
-  // Training status display
-  const trainingStatusDisplay = addTextDisplay(statusFieldset, "Status");
-  const epochDisplay = addTextDisplay(statusFieldset, "Current Epoch");
-  const accuracyDisplay = addTextDisplay(statusFieldset, "Current Accuracy");
-  
-  // Register status elements with the UI manager
-  uiManager.registerStatusElements(
-    trainingStatusDisplay.valueElement,
-    epochDisplay.valueElement,
-    accuracyDisplay.valueElement
-  );
-  
   // Training controls with emoji buttons
   const controlsFieldset = document.createElement('fieldset');
   const controlsLegend = document.createElement('legend');
@@ -47,11 +25,21 @@ export function setupControls(appController: AppController): HTMLElement {
   
   // Training controls container
   const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.gap = '10px';
   controlsFieldset.appendChild(buttonContainer);
   
-  // Create single training control button
+  // Create training control button
   const trainingButton = document.createElement('button');
   trainingButton.textContent = "▶️  Train";
+  
+  // Create reset button
+  const resetButton = document.createElement('button');
+  resetButton.textContent = "🔄  Reset";
+  resetButton.addEventListener('click', () => {
+    uiManager.onResetNetwork();
+    hasStartedTraining = false;
+  });
   
   // Track if training has started (to distinguish between initial Train and Resume)
   let hasStartedTraining = false;
@@ -61,9 +49,8 @@ export function setupControls(appController: AppController): HTMLElement {
     const currentStatus = appController.getAppState().status.getValue();
     
     if (currentStatus === "Complete") {
-      // If completed, reset
-      uiManager.onResetNetwork();
-      hasStartedTraining = false;
+      // If completed, do nothing - user must use reset button
+      return;
     } else if (currentState.isTraining) {
       // If training, pause it
       uiManager.onStopTraining();
@@ -79,13 +66,17 @@ export function setupControls(appController: AppController): HTMLElement {
     const currentStatus = appController.getAppState().status.getValue();
     
     if (currentStatus === "Complete") {
-      trainingButton.textContent = "⏮️  Reset";
+      trainingButton.textContent = "⏹️  Stopped";
+      trainingButton.disabled = true;
     } else if (config.isTraining) {
       trainingButton.textContent = "⏸️  Pause";
+      trainingButton.disabled = false;
     } else if (hasStartedTraining && config.currentEpoch > 0) {
       trainingButton.textContent = "⏯️  Resume";
+      trainingButton.disabled = false;
     } else {
       trainingButton.textContent = "▶️  Train";
+      trainingButton.disabled = false;
       hasStartedTraining = false; // Reset flag when starting fresh
     }
   });
@@ -93,14 +84,17 @@ export function setupControls(appController: AppController): HTMLElement {
   // Also subscribe to status changes to handle completion
   appController.getAppState().status.subscribe(status => {
     if (status === "Complete") {
-      trainingButton.textContent = "⏮️  Reset";
+      trainingButton.textContent = "⏹️  Stopped";
+      trainingButton.disabled = true;
     } else if (status === "Reset") {
       trainingButton.textContent = "▶️  Train";
+      trainingButton.disabled = false;
       hasStartedTraining = false;
     }
   });
   
   buttonContainer.appendChild(trainingButton);
+  buttonContainer.appendChild(resetButton);
   
   // Add network architecture sliders
   const architectureFieldset = document.createElement('fieldset');
@@ -153,12 +147,12 @@ export function setupControls(appController: AppController): HTMLElement {
 
   // Pattern selection radio buttons
   const patternOptions = [
-    { id: PatternType.RANDOM, label: 'Random', checked: true },
-    { id: PatternType.CHECKERBOARD, label: 'Checkerboard' },
-    { id: PatternType.STRIPES_HORIZONTAL, label: 'Horizontal Stripes' },
-    { id: PatternType.STRIPES_VERTICAL, label: 'Vertical Stripes' },
-    { id: PatternType.CIRCLE, label: 'Circle' },
+    { id: PatternType.CIRCLE, label: 'Circle', checked: true },
     { id: PatternType.CORNERS, label: 'Corners' },
+    { id: PatternType.STRIPES_VERTICAL, label: 'Vertical Stripes' },
+    { id: PatternType.STRIPES_HORIZONTAL, label: 'Horizontal Stripes' },
+    { id: PatternType.CHECKERBOARD, label: 'Checkerboard' },
+    { id: PatternType.RANDOM, label: 'Random' },
     { id: PatternType.DRAWING_PAD, label: 'Drawing Pad' }
   ];
 
@@ -211,7 +205,7 @@ export function setupControls(appController: AppController): HTMLElement {
     uiManager.onPanelVisibilityChange("predictions", checked);
   });
   
-  const polytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes", true, (checked) => {
+  const polytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes", false, (checked) => {
     uiManager.onPanelVisibilityChange("polytopes", checked);
   });
   

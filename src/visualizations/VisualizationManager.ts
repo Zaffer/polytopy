@@ -76,7 +76,13 @@ export class VisualizationManager {
    * Create or update the polytope visualization
    */
   public updatePolytopeVisualization(): void {
-    const visualization = createPolytopeVisualization();
-    this.sceneManager.updatePanel(PanelType.POLYTOPES, visualization);
+    this.subscriptions.push(
+      this.appState.visualizationOptions.subscribe(options => {
+        if (options.showPolytopes) {
+          const visualization = createPolytopeVisualization();
+          this.sceneManager.updatePanel(PanelType.POLYTOPES, visualization);
+        }
+      })
+    );
   }
 }
