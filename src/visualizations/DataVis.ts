@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { createTextSprite } from "../utils/TextUtils";
 
 export function generateBinaryData(rows: number, cols: number): number[][] {
   return Array.from({ length: rows }, () =>
@@ -34,11 +33,6 @@ export function createDataVisualization(data: number[][]): THREE.Group {
       group.add(cell);
     });
   });
-
-  // Add a title to the data panel
-  const titleSprite = createTextSprite('Training Data', 32, "rgba(0, 0, 0, 0.5)");
-  titleSprite.position.y = (data.length * (cellSize + spacing)) / 2 + 1;
-  group.add(titleSprite);
 
   return group;
 }

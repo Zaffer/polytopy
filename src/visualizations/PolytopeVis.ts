@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { createTextSprite } from "../utils/TextUtils";
 
 export function createPolytopeVisualization(): THREE.Group {
   const group = new THREE.Group();
@@ -29,7 +28,7 @@ export function createPolytopeVisualization(): THREE.Group {
   }
 
   // Render each polytope group as points
-  activationPatterns.forEach((groupPoints, pattern) => {
+  activationPatterns.forEach((groupPoints) => {
     const geometry = new THREE.BufferGeometry();
     const vertices = new Float32Array(groupPoints.flatMap(p => [p.x, p.y, p.z]));
     geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
@@ -71,14 +70,6 @@ export function createPolytopeVisualization(): THREE.Group {
 
   const boundaryLines = new THREE.LineSegments(boundaryGeometry, boundaryMaterial);
   group.add(boundaryLines);
-
-  // Add a title to the polytope panel
-  const titleSprite = createTextSprite('Polytope Visualization', 32, "rgba(0, 0, 0, 0.5)");
-  
-  // Position the title above the polytope visualization
-  titleSprite.position.y = gridRange + 1.5;
-  
-  group.add(titleSprite);
 
   return group;
 }

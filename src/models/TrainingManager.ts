@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { AppState } from '../utils/AppState';
+import { AppState } from '../core/AppState';
 import { DataManager } from './DataGenerator';
 import { SimpleNeuralNetwork } from './NeuralNetworkTrainer';
 import { TrainingSample } from '../types/model';

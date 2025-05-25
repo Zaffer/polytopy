@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { NeuralNetworkStructure } from "../types/model";
-import { createTextSprite } from "@/utils/TextUtils";
 
 export function createNeuralNetworkVisualization(
   networkStructure: NeuralNetworkStructure
@@ -24,13 +23,6 @@ export function createNeuralNetworkVisualization(
     new THREE.Color(0xe74c3c)  // Output layer - red
   ];
   
-  // Create layer labels
-  const layerLabels = [
-    "Input Layer", 
-    ...Array(hiddenLayerCount).fill(0).map((_, i) => `Hidden Layer ${i+1}`),
-    "Output Layer"
-  ];
-  
   // Draw all layers
   layers.forEach((nodeCount, layerIndex) => {
     // Scale down if there are too many nodes to display
@@ -45,18 +37,6 @@ export function createNeuralNetworkVisualization(
     // Create a layer group
     const layerGroup = new THREE.Group();
     layerGroup.position.z = -layerIndex * layerSpacing;
-    
-    // Add a layer label
-    // Use the layer labels we created earlier instead of hardcoded ones
-    const labelText = layerIndex < layerLabels.length 
-      ? `${layerLabels[layerIndex]} (${nodeCount} nodes)`
-      : `Layer ${layerIndex} (${nodeCount} nodes)`;
-    const labelSprite = createTextSprite(labelText, 14);
-    
-    // Position the label below the layer
-    labelSprite.position.y = -(displayCount * nodeSpacing) / 2 - 0.7;
-    
-    layerGroup.add(labelSprite);
     
     // Create nodes for this layer
     for (let i = 0; i < displayCount; i++) {
@@ -156,35 +136,6 @@ export function createNeuralNetworkVisualization(
     
     group.add(connectionGroup);
   }
-
-  // Add a title to the neural network panel
-  const titleSprite = createTextSprite('Neural Network', 32, "rgba(0, 0, 0, 0.5)");
-  
-  // Calculate max node count for positioning
-  const maxNodeCount = Math.max(...layers.map(count => Math.min(count, 20)));
-  titleSprite.position.y = (maxNodeCount * nodeSpacing) / 2 + 1;
-  
-  group.add(titleSprite);
-
-  // Add network summary information
-  // Calculate total parameters in the network
-  let totalParams = 0;
-  for (let i = 0; i < layers.length - 1; i++) {
-    // Weights between layers + bias for each layer
-    totalParams += layers[i] * layers[i+1] + layers[i+1];
-  }
-  
-  // Create architecture string
-  const architecture = layers.join('-');
-  
-  const infoText = `Total Parameters: ${totalParams}\nArchitecture: ${architecture}`;
-  const infoSprite = createTextSprite(infoText, 14, "rgba(0, 0, 0, 0.5)");
-  
-  // Position the info below the neural network
-  infoSprite.position.y = -(maxNodeCount * nodeSpacing) / 2 - 2;
-  infoSprite.position.z = -layerSpacing;
-  
-  group.add(infoSprite);
 
   return group;
 }

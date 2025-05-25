@@ -1,4 +1,4 @@
-import { AppState } from '../utils/AppState';
+import { AppState } from '../core/AppState';
 
 /**
  * Minimal loss chart - just a simple line on a canvas
@@ -23,10 +23,6 @@ export class LossChart {
     // Create legend with loss and accuracy display
     const legend = document.createElement('legend');
     legend.id = 'lossDisplay';
-
-    legend.style.cssText = `
-      font-family: monospace;
-    `;
 
     legend.textContent = 'Training Loss';
     this.container.appendChild(legend);

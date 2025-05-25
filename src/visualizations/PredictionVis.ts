@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { createTextSprite } from "../utils/TextUtils";
 
 export function createPredictionVisualization(predictions: number[][]): THREE.Group {
   const group = new THREE.Group();
@@ -70,20 +69,9 @@ export function createPredictionVisualization(predictions: number[][]): THREE.Gr
         0
       );
 
-      // Add a white outline to each cell
-      const edgesGeometry = new THREE.EdgesGeometry(geometry);
-      const edgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-      const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-      cell.add(edges);
-
       group.add(cell);
     });
   });
-
-  // Add a title to the prediction panel
-  const titleSprite = createTextSprite('Neural Network Predictions', 32, "rgba(0, 0, 0, 0.5)");
-  titleSprite.position.y = (predictions.length * (cellSize + spacing)) / 2 + 1;
-  group.add(titleSprite);
 
   return group;
 }

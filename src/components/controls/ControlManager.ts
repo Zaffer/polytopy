@@ -1,5 +1,5 @@
 import { Subscription } from "rxjs";
-import { AppState } from "../../utils/AppState";
+import { AppState } from "../../core/AppState";
 import { AppController } from "../../core/AppController";
 import { PanelType } from "../../types/scene";
 import { PatternType } from "../../types/model";

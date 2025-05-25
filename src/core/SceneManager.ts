@@ -4,6 +4,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { VisualizationManager } from "../visualizations/VisualizationManager";
 import { PanelType, SceneConfig, DEFAULT_SCENE_CONFIG } from "../types/scene";
+import { PanelLabels } from "../components/PanelLabels";
 
 /**
  * SceneManager class responsible for the core 3D scene setup and management
@@ -18,6 +19,7 @@ export class SceneManager {
   
   // Application components
   private visualizationManager: VisualizationManager;
+  private panelLabels: PanelLabels;
   
   // Configuration
   private config: SceneConfig;
@@ -59,6 +61,10 @@ export class SceneManager {
     
     // Initialize visualizations
     this.visualizationManager = new VisualizationManager(this);
+    
+    // Initialize panel labels
+    this.panelLabels = new PanelLabels();
+    this.scene.add(this.panelLabels.getLabelGroup());
   }
   
   /**
@@ -98,6 +104,7 @@ export class SceneManager {
    */
   public dispose(): void {
     this.visualizationManager.dispose();
+    this.panelLabels.dispose();
     this.renderer.setAnimationLoop(null);
     window.removeEventListener("resize", this.onWindowResize.bind(this));
   }
@@ -122,6 +129,9 @@ export class SceneManager {
     group.position.z = currentDepth;
     this.panels.set(name, group);
     this.scene.add(group);
+    
+    // Add label for this panel
+    this.panelLabels.setLabel(name, group.position);
   }
   
   /**
@@ -135,6 +145,9 @@ export class SceneManager {
       this.scene.remove(oldGroup);
       this.scene.add(newGroup);
       this.panels.set(name, newGroup);
+      
+      // Update label position
+      this.panelLabels.updateLabelPosition(name, newGroup.position);
       
       // Reposition panels that come after this one
       this.repositionPanelsAfter(name);
@@ -183,6 +196,8 @@ export class SceneManager {
         }
         
         panel.position.z = currentDepth;
+        // Update label position
+        this.panelLabels.updateLabelPosition(panelType, panel.position);
       }
     }
 
@@ -201,6 +216,8 @@ export class SceneManager {
           const depth = boundingBox.max.z - boundingBox.min.z;
           currentDepth = prevPanel.position.z - depth - this.config.panelSpacing;
           panel.position.z = currentDepth;
+          // Update label position
+          this.panelLabels.updateLabelPosition(panelType, panel.position);
         }
       }
     }
@@ -214,6 +231,9 @@ export class SceneManager {
     if (group) {
       group.visible = visible;
     }
+    
+    // Also toggle label visibility
+    this.panelLabels.setLabelVisibility(name, visible);
   }
   
   /**

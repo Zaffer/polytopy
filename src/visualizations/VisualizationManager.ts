@@ -2,7 +2,7 @@ import { Observable, Subscription } from "rxjs";
 
 import { SceneManager } from "../core/SceneManager";
 import { PanelType } from "../types/scene";
-import { AppState } from "../utils/AppState";
+import { AppState } from "../core/AppState";
 import { createDataVisualization } from "./DataVis";
 import { createNeuralNetworkVisualization } from "./NetworkVis";
 import { createPredictionVisualization } from "./PredictionVis";

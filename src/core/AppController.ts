@@ -3,7 +3,7 @@ import { SceneManager } from './SceneManager';
 import { PanelType } from '../types/scene';
 import { DataManager } from '../models/DataGenerator';
 import { TrainingManager } from '../models/TrainingManager';
-import { AppState } from '../utils/AppState';
+import { AppState } from './AppState';
 import { PatternType } from '../types/model';
 
 /**
