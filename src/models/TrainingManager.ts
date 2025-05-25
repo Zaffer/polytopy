@@ -16,6 +16,9 @@ export class TrainingManager {
   // Observable for current predictions
   private predictionsSubject = new BehaviorSubject<number[][]>([]);
   
+  // Observable for weight updates during training 
+  private weightsUpdateSubject = new Subject<void>();
+  
   // Signal to stop current training
   private stopTraining$ = new Subject<void>();
   
@@ -54,6 +57,27 @@ export class TrainingManager {
    */
   public getPredictions$(): Observable<number[][]> {
     return this.predictionsSubject.asObservable();
+  }
+
+  /**
+   * Get the current neural network instance for visualization
+   */
+  public getNeuralNetwork(): SimpleNeuralNetwork {
+    return this.neuralNetwork;
+  }
+
+  /**
+   * Get network statistics for visualization
+   */
+  public getNetworkStats() {
+    return this.neuralNetwork.getNetworkInfo();
+  }
+
+  /**
+   * Get observable for weight updates during training
+   */
+  public getWeightsUpdate$(): Observable<void> {
+    return this.weightsUpdateSubject.asObservable();
   }
   
   /**
@@ -171,6 +195,8 @@ export class TrainingManager {
       // Update visualizations at specified intervals or at the end
       if (newEpoch % currentState.updateInterval === 0 || newEpoch >= currentState.epochs) {
         this.updatePredictions();
+        // Notify that weights have been updated for real-time visualization
+        this.weightsUpdateSubject.next();
       }
       
       // Check if we need to continue training

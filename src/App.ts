@@ -36,7 +36,7 @@ export class Application {
     
     // Connect visualizations to data sources
     this.visualizationManager.updateDataVisualization(dataManager.getData$());
-    this.visualizationManager.updateNetworkVisualization();
+    this.visualizationManager.updateNetworkVisualization(trainingManager);
     this.visualizationManager.updatePredictionVisualization(trainingManager.getPredictions$());
     this.visualizationManager.updatePolytopeVisualization();
   }

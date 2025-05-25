@@ -1,8 +1,10 @@
 import * as THREE from "three";
 import { NeuralNetworkStructure } from "../types/model";
+import { SimpleNeuralNetwork } from "../models/NeuralNetworkTrainer";
 
 export function createNeuralNetworkVisualization(
-  networkStructure: NeuralNetworkStructure
+  networkStructure: NeuralNetworkStructure,
+  networkInstance?: SimpleNeuralNetwork
 ): THREE.Group {
   const group = new THREE.Group();
   const layerSpacing = 2;
@@ -15,15 +17,26 @@ export function createNeuralNetworkVisualization(
   // Define all layers of the network
   const layers = [inputSize, ...(Array.isArray(hiddenSizes) ? hiddenSizes : [hiddenSizes]), outputSize];
   
-  // Create a map of node colors for different layers
-  const hiddenLayerCount = Array.isArray(hiddenSizes) ? hiddenSizes.length : 1;
-  const layerColors = [
+  // Enhanced color scheme with activation-based coloring
+  const baseLayerColors = [
     new THREE.Color(0x3498db), // Input layer - blue
-    ...Array(hiddenLayerCount).fill(0).map(() => new THREE.Color(0xf1c40f)), // Hidden layers - yellow
+    ...Array(Array.isArray(hiddenSizes) ? hiddenSizes.length : 1).fill(0).map(() => new THREE.Color(0xf1c40f)), // Hidden layers - yellow
     new THREE.Color(0xe74c3c)  // Output layer - red
   ];
+
+  // Get sample activations for dynamic node coloring (if network instance available)
+  let sampleActivations: number[][] = [];
+  if (networkInstance) {
+    try {
+      // Use a sample input (center of grid) to get current activations
+      const sampleInput = [0.5, 0.5];
+      sampleActivations = networkInstance.getActivations(sampleInput);
+    } catch (e) {
+      console.warn("Could not get sample activations:", e);
+    }
+  }
   
-  // Draw all layers
+  // Draw all layers with enhanced node visualization
   layers.forEach((nodeCount, layerIndex) => {
     // Scale down if there are too many nodes to display
     let displayCount = nodeCount;
@@ -38,13 +51,40 @@ export function createNeuralNetworkVisualization(
     const layerGroup = new THREE.Group();
     layerGroup.position.z = -layerIndex * layerSpacing;
     
-    // Create nodes for this layer
+    // Create nodes for this layer with dynamic coloring
     for (let i = 0; i < displayCount; i++) {
       const nodeIndex = i * skipFactor;
       if (nodeIndex >= nodeCount) continue;
       
-      const geometry = new THREE.SphereGeometry(nodeRadius, 16, 16);
-      const material = new THREE.MeshBasicMaterial({ color: layerColors[layerIndex] });
+      // Enhanced node visualization based on activation
+      let nodeColor = baseLayerColors[layerIndex].clone();
+      let nodeSize = nodeRadius;
+      
+      // For hidden layers, color based on activation if available
+      if (layerIndex > 0 && layerIndex < layers.length - 1 && sampleActivations.length > 0) {
+        const activationLayerIdx = layerIndex - 1; // Adjust for input layer
+        if (activationLayerIdx < sampleActivations.length && nodeIndex < sampleActivations[activationLayerIdx].length) {
+          const activation = sampleActivations[activationLayerIdx][nodeIndex];
+          
+          // Color intensity based on activation level
+          const intensity = Math.min(Math.max(activation, 0), 1); // Clamp to [0,1]
+          nodeColor = new THREE.Color().lerpColors(
+            new THREE.Color(0x2c3e50), // Dark for low activation
+            baseLayerColors[layerIndex], // Base color for high activation
+            intensity
+          );
+          
+          // Node size based on activation (subtle effect)
+          nodeSize = nodeRadius * (0.7 + 0.3 * intensity);
+        }
+      }
+      
+      const geometry = new THREE.SphereGeometry(nodeSize, 16, 16);
+      const material = new THREE.MeshBasicMaterial({ 
+        color: nodeColor,
+        transparent: true,
+        opacity: 0.8
+      });
       const node = new THREE.Mesh(geometry, material);
       
       node.position.set(
@@ -59,7 +99,7 @@ export function createNeuralNetworkVisualization(
     group.add(layerGroup);
   });
   
-  // Draw connections between layers
+  // Enhanced connection visualization with smart filtering
   for (let layerIndex = 0; layerIndex < layers.length - 1; layerIndex++) {
     const currentLayerCount = layers[layerIndex];
     const nextLayerCount = layers[layerIndex + 1];
@@ -82,59 +122,157 @@ export function createNeuralNetworkVisualization(
     // Create a group for connections between these layers
     const connectionGroup = new THREE.Group();
     
-    // Draw a subset of connections to avoid visual clutter
-    const connectionSubsample = Math.max(1, Math.floor(currentDisplayCount * nextDisplayCount / 100));
+    // Collect all weights for this layer to determine threshold for filtering
+    const allWeights: Array<{weight: number, i: number, j: number}> = [];
     
-    let connectionCount = 0;
-    for (let i = 0; i < currentDisplayCount; i++) {
-      const sourceNodeIndex = i * currentSkipFactor;
-      if (sourceNodeIndex >= currentLayerCount) continue;
+    if (networkInstance) {
+      for (let i = 0; i < currentDisplayCount; i++) {
+        const sourceNodeIndex = i * currentSkipFactor;
+        if (sourceNodeIndex >= currentLayerCount) continue;
+        
+        for (let j = 0; j < nextDisplayCount; j++) {
+          const targetNodeIndex = j * nextSkipFactor;
+          if (targetNodeIndex >= nextLayerCount) continue;
+          
+          const weight = networkInstance.getWeight(layerIndex, sourceNodeIndex, targetNodeIndex);
+          allWeights.push({ weight: Math.abs(weight), i, j });
+        }
+      }
       
-      for (let j = 0; j < nextDisplayCount; j++) {
-        const targetNodeIndex = j * nextSkipFactor;
-        if (targetNodeIndex >= nextLayerCount) continue;
-        
-        // Only draw a subset of connections
-        connectionCount++;
-        if (connectionCount % connectionSubsample !== 0) continue;
-        
-        // Get the weight value for this connection
-        // Generate a random weight value for visualization
-        const weight = Math.random() * 2 - 1;
-        
-        // Calculate color based on weight
-        const weightColor = weight > 0 ? 
-          new THREE.Color(0x00ff00).lerp(new THREE.Color(0xffffff), 1 - Math.abs(weight)) : 
-          new THREE.Color(0xff0000).lerp(new THREE.Color(0xffffff), 1 - Math.abs(weight));
-        
-        // Calculate positions
-        const startX = 0;
-        const startY = i * nodeSpacing - (currentDisplayCount * nodeSpacing) / 2 + nodeSpacing / 2;
-        const startZ = -layerIndex * layerSpacing;
-        
-        const endX = 0;
-        const endY = j * nodeSpacing - (nextDisplayCount * nodeSpacing) / 2 + nodeSpacing / 2;
-        const endZ = -(layerIndex + 1) * layerSpacing;
-        
-        // Create the line
+      // Sort by weight magnitude and only show the strongest connections
+      allWeights.sort((a, b) => b.weight - a.weight);
+    }
+    
+    // Limit number of connections for visual clarity
+    const maxConnections = Math.min(50, allWeights.length || currentDisplayCount * nextDisplayCount / 10);
+    const connectionsToShow = networkInstance ? allWeights.slice(0, maxConnections) : [];
+    
+    // If no network instance, show a subset of random connections
+    if (!networkInstance) {
+      const connectionSubsample = Math.max(1, Math.floor(currentDisplayCount * nextDisplayCount / 100));
+      let connectionCount = 0;
+      
+      for (let i = 0; i < currentDisplayCount; i++) {
+        for (let j = 0; j < nextDisplayCount; j++) {
+          connectionCount++;
+          if (connectionCount % connectionSubsample !== 0) continue;
+          connectionsToShow.push({ weight: Math.random(), i, j });
+        }
+      }
+    }
+    
+    // Draw the selected connections with enhanced visualization
+    connectionsToShow.forEach(({ i, j }) => {
+      const sourceNodeIndex = i * currentSkipFactor;
+      const targetNodeIndex = j * nextSkipFactor;
+      
+      // Get the actual weight (with sign) for coloring
+      let actualWeight: number;
+      if (networkInstance) {
+        actualWeight = networkInstance.getWeight(layerIndex, sourceNodeIndex, targetNodeIndex);
+      } else {
+        actualWeight = Math.random() * 2 - 1;
+      }
+      
+      // Enhanced color calculation with better contrast
+      const absWeight = Math.abs(actualWeight);
+      let weightColor: THREE.Color;
+      
+      if (actualWeight > 0) {
+        // Positive weights: Green to bright green
+        weightColor = new THREE.Color(0x27ae60).lerp(new THREE.Color(0x2ecc71), absWeight);
+      } else {
+        // Negative weights: Red to bright red  
+        weightColor = new THREE.Color(0xc0392b).lerp(new THREE.Color(0xe74c3c), absWeight);
+      }
+      
+      // Calculate positions
+      const startX = 0;
+      const startY = i * nodeSpacing - (currentDisplayCount * nodeSpacing) / 2 + nodeSpacing / 2;
+      const startZ = -layerIndex * layerSpacing;
+      
+      const endX = 0;
+      const endY = j * nodeSpacing - (nextDisplayCount * nodeSpacing) / 2 + nodeSpacing / 2;
+      const endZ = -(layerIndex + 1) * layerSpacing;
+      
+      // Create the line with variable thickness (simulate with multiple lines)
+      const lineThickness = Math.max(1, Math.floor(absWeight * 3));
+      
+      for (let thick = 0; thick < lineThickness; thick++) {
+        const offset = (thick - lineThickness/2) * 0.02;
         const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(startX, startY, startZ),
-          new THREE.Vector3(endX, endY, endZ)
+          new THREE.Vector3(startX + offset, startY, startZ),
+          new THREE.Vector3(endX + offset, endY, endZ)
         ]);
         
-        // Line thickness based on weight
+        // Enhanced line material with dynamic opacity
         const lineMaterial = new THREE.LineBasicMaterial({ 
           color: weightColor,
           transparent: true,
-          opacity: 0.5 + Math.abs(weight) * 0.5 // Stronger weights are more visible
+          opacity: 0.3 + absWeight * 0.7 // Stronger weights are more visible
         });
         
         const line = new THREE.Line(lineGeometry, lineMaterial);
         connectionGroup.add(line);
       }
-    }
+    });
     
     group.add(connectionGroup);
+  }
+
+  // Add network statistics display if we have a network instance
+  if (networkInstance) {
+    try {
+      const stats = networkInstance.getWeightStats();
+      const networkInfo = networkInstance.getNetworkInfo();
+      
+      // Create a text sprite for statistics (simplified approach)
+      const statsText = `Network Stats:
+Weights: ${stats.total}
+Range: [${stats.min.toFixed(3)}, ${stats.max.toFixed(3)}]
+Mean: ${stats.mean.toFixed(3)}
+Std: ${stats.std.toFixed(3)}
+Layers: ${networkInfo.totalLayers}
+Params: ${networkInfo.totalParameters}`;
+      
+      // Create a simple text display using a plane with canvas texture
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (context) {
+        canvas.width = 256;
+        canvas.height = 256;
+        
+        context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        context.fillStyle = 'white';
+        context.font = '14px Arial';
+        context.textAlign = 'left';
+        
+        const lines = statsText.split('\n');
+        lines.forEach((line, index) => {
+          context.fillText(line, 10, 20 + index * 18);
+        });
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        const material = new THREE.MeshBasicMaterial({ 
+          map: texture, 
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+        
+        const geometry = new THREE.PlaneGeometry(2, 2);
+        const statsPlane = new THREE.Mesh(geometry, material);
+        
+        // Position the stats display
+        statsPlane.position.set(-3, 0, 0);
+        statsPlane.lookAt(new THREE.Vector3(0, 0, 1));
+        
+        group.add(statsPlane);
+      }
+    } catch (e) {
+      console.warn("Could not create network statistics display:", e);
+    }
   }
 
   return group;

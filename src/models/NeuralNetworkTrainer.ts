@@ -227,4 +227,180 @@ export class SimpleNeuralNetwork {
     
     return validSamples > 0 ? totalLoss / validSamples : 0;
   }
+
+  /**
+   * Get weight between two specific nodes
+   */
+  public getWeight(layerIndex: number, fromNodeIndex: number, toNodeIndex: number): number {
+    if (layerIndex < 0 || layerIndex >= this.weights.length) {
+      return 0;
+    }
+    
+    const layerWeights = this.weights[layerIndex];
+    if (fromNodeIndex < 0 || fromNodeIndex >= layerWeights.length ||
+        toNodeIndex < 0 || toNodeIndex >= layerWeights[fromNodeIndex].length) {
+      return 0;
+    }
+    
+    return layerWeights[fromNodeIndex][toNodeIndex];
+  }
+
+  /**
+   * Get all weights for a specific layer
+   */
+  public getLayerWeights(layerIndex: number): number[][] {
+    if (layerIndex < 0 || layerIndex >= this.weights.length) {
+      return [];
+    }
+    return this.weights[layerIndex];
+  }
+
+  /**
+   * Get bias for a specific node in a layer
+   */
+  public getBias(layerIndex: number, nodeIndex: number): number {
+    if (layerIndex < 0 || layerIndex >= this.biases.length ||
+        nodeIndex < 0 || nodeIndex >= this.biases[layerIndex].length) {
+      return 0;
+    }
+    return this.biases[layerIndex][nodeIndex];
+  }
+
+  /**
+   * Get all biases for a specific layer
+   */
+  public getLayerBiases(layerIndex: number): number[] {
+    if (layerIndex < 0 || layerIndex >= this.biases.length) {
+      return [];
+    }
+    return this.biases[layerIndex];
+  }
+
+  /**
+   * Get network structure info
+   */
+  public getNetworkInfo() {
+    return {
+      inputSize: this.inputSize,
+      hiddenSizes: this.hiddenSizes,
+      outputSize: this.outputSize,
+      learningRate: this.learningRate,
+      totalLayers: this.weights.length,
+      totalParameters: this.getTotalParameters()
+    };
+  }
+
+  /**
+   * Calculate total number of parameters in the network
+   */
+  private getTotalParameters(): number {
+    let total = 0;
+    
+    // Count weights
+    for (const layerWeights of this.weights) {
+      for (const nodeWeights of layerWeights) {
+        total += nodeWeights.length;
+      }
+    }
+    
+    // Count biases
+    for (const layerBiases of this.biases) {
+      total += layerBiases.length;
+    }
+    
+    return total;
+  }
+
+  /**
+   * Get weight statistics for visualization
+   */
+  public getWeightStats() {
+    let minWeight = Number.MAX_VALUE;
+    let maxWeight = Number.MIN_VALUE;
+    let totalWeights = 0;
+    let sumWeights = 0;
+    let sumSquaredWeights = 0;
+
+    for (const layerWeights of this.weights) {
+      for (const nodeWeights of layerWeights) {
+        for (const weight of nodeWeights) {
+          minWeight = Math.min(minWeight, weight);
+          maxWeight = Math.max(maxWeight, weight);
+          sumWeights += weight;
+          sumSquaredWeights += weight * weight;
+          totalWeights++;
+        }
+      }
+    }
+
+    const meanWeight = totalWeights > 0 ? sumWeights / totalWeights : 0;
+    const variance = totalWeights > 0 ? (sumSquaredWeights / totalWeights) - (meanWeight * meanWeight) : 0;
+    const stdWeight = Math.sqrt(variance);
+
+    return {
+      min: minWeight === Number.MAX_VALUE ? 0 : minWeight,
+      max: maxWeight === Number.MIN_VALUE ? 0 : maxWeight,
+      mean: meanWeight,
+      std: stdWeight,
+      total: totalWeights
+    };
+  }
+
+  /**
+   * Get current activations for a given input (for visualization)
+   */
+  public getActivations(input: number[]): number[][] {
+    try {
+      const { activations } = this.forward(input);
+      return activations;
+    } catch (e) {
+      console.error("Error getting activations:", e);
+      return this.hiddenSizes.map(size => Array(size).fill(0));
+    }
+  }
+
+  /**
+   * Get activation statistics across multiple samples
+   */
+  public getActivationStats(inputs: number[][]): { mean: number[][], std: number[][], max: number[][] } {
+    if (!inputs || inputs.length === 0) {
+      const emptyLayer = this.hiddenSizes.map(size => Array(size).fill(0));
+      return { mean: emptyLayer, std: emptyLayer, max: emptyLayer };
+    }
+
+    const allActivations = inputs.map(input => this.getActivations(input));
+    const numLayers = this.hiddenSizes.length;
+    
+    const mean: number[][] = [];
+    const std: number[][] = [];
+    const max: number[][] = [];
+
+    for (let layerIdx = 0; layerIdx < numLayers; layerIdx++) {
+      const layerSize = this.hiddenSizes[layerIdx];
+      const layerMean: number[] = [];
+      const layerStd: number[] = [];
+      const layerMax: number[] = [];
+
+      for (let nodeIdx = 0; nodeIdx < layerSize; nodeIdx++) {
+        const values = allActivations.map(activations => 
+          activations[layerIdx] ? activations[layerIdx][nodeIdx] || 0 : 0
+        );
+        
+        const meanVal = values.reduce((sum, val) => sum + val, 0) / values.length;
+        const variance = values.reduce((sum, val) => sum + Math.pow(val - meanVal, 2), 0) / values.length;
+        const stdVal = Math.sqrt(variance);
+        const maxVal = Math.max(...values);
+
+        layerMean.push(meanVal);
+        layerStd.push(stdVal);
+        layerMax.push(maxVal);
+      }
+
+      mean.push(layerMean);
+      std.push(layerStd);
+      max.push(layerMax);
+    }
+
+    return { mean, std, max };
+  }
 }

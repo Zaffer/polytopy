@@ -7,6 +7,7 @@ import { createDataVisualization } from "./DataVis";
 import { createNeuralNetworkVisualization } from "./NetworkVis";
 import { createPredictionVisualization } from "./PredictionVis";
 import { createPolytopeVisualization } from "./PolytopeVis";
+import { TrainingManager } from "../models/TrainingManager";
 
 /**
  * Manager for 3D visualizations of neural network, data, and predictions
@@ -14,6 +15,7 @@ import { createPolytopeVisualization } from "./PolytopeVis";
 export class VisualizationManager {
   private sceneManager: SceneManager;
   private appState: AppState;
+  private trainingManager?: TrainingManager;
   
   // Subscriptions
   private subscriptions: Subscription[] = [];
@@ -45,17 +47,38 @@ export class VisualizationManager {
   /**
    * Create or update the neural network visualization
    */
-  public updateNetworkVisualization(): void {
+  public updateNetworkVisualization(trainingManager: TrainingManager): void {
+    // Store the training manager for use in subscriptions
+    this.trainingManager = trainingManager;
+    
+    // Subscribe to network config changes
     this.subscriptions.push(
       this.appState.networkConfig.subscribe(config => {
+        const networkInstance = this.trainingManager?.getNeuralNetwork();
         const visualization = createNeuralNetworkVisualization({
           inputSize: config.inputSize,
           hiddenSizes: config.hiddenSizes,
           outputSize: config.outputSize
-        });
+        }, networkInstance);
         this.sceneManager.updatePanel(PanelType.NEURAL_NETWORK, visualization);
       })
     );
+
+    // Subscribe to real-time weight updates during training
+    if (this.trainingManager) {
+      this.subscriptions.push(
+        this.trainingManager.getWeightsUpdate$().subscribe(() => {
+          const config = this.appState.networkConfig.getValue();
+          const networkInstance = this.trainingManager?.getNeuralNetwork();
+          const visualization = createNeuralNetworkVisualization({
+            inputSize: config.inputSize,
+            hiddenSizes: config.hiddenSizes,
+            outputSize: config.outputSize
+          }, networkInstance);
+          this.sceneManager.updatePanel(PanelType.NEURAL_NETWORK, visualization);
+        })
+      );
+    }
   }
   
   /**
