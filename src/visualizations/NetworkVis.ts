@@ -17,12 +17,9 @@ export function createNeuralNetworkVisualization(
   // Define all layers of the network
   const layers = [inputSize, ...(Array.isArray(hiddenSizes) ? hiddenSizes : [hiddenSizes]), outputSize];
   
-  // Enhanced color scheme with activation-based coloring
-  const baseLayerColors = [
-    new THREE.Color(0x3498db), // Input layer - blue
-    ...Array(Array.isArray(hiddenSizes) ? hiddenSizes.length : 1).fill(0).map(() => new THREE.Color(0xf1c40f)), // Hidden layers - yellow
-    new THREE.Color(0xe74c3c)  // Output layer - red
-  ];
+  // Green to red color scheme for all layers
+  const lowActivationColor = new THREE.Color(0x27ae60); // Green for low activation
+  const highActivationColor = new THREE.Color(0xe74c3c); // Red for high activation
 
   // Get sample activations for dynamic node coloring (if network instance available)
   let sampleActivations: number[][] = [];
@@ -56,27 +53,39 @@ export function createNeuralNetworkVisualization(
       const nodeIndex = i * skipFactor;
       if (nodeIndex >= nodeCount) continue;
       
-      // Enhanced node visualization based on activation
-      let nodeColor = baseLayerColors[layerIndex].clone();
+      // Green to red node visualization based on activation
+      let nodeColor = lowActivationColor.clone();
       let nodeSize = nodeRadius;
       
-      // For hidden layers, color based on activation if available
-      if (layerIndex > 0 && layerIndex < layers.length - 1 && sampleActivations.length > 0) {
-        const activationLayerIdx = layerIndex - 1; // Adjust for input layer
-        if (activationLayerIdx < sampleActivations.length && nodeIndex < sampleActivations[activationLayerIdx].length) {
-          const activation = sampleActivations[activationLayerIdx][nodeIndex];
-          
-          // Color intensity based on activation level
-          const intensity = Math.min(Math.max(activation, 0), 1); // Clamp to [0,1]
-          nodeColor = new THREE.Color().lerpColors(
-            new THREE.Color(0x2c3e50), // Dark for low activation
-            baseLayerColors[layerIndex], // Base color for high activation
-            intensity
-          );
-          
-          // Node size based on activation (subtle effect)
-          nodeSize = nodeRadius * (0.7 + 0.3 * intensity);
+      // Color based on activation if available
+      if (sampleActivations.length > 0) {
+        let activation = 0;
+        
+        if (layerIndex === 0) {
+          // Input layer - use a default moderate activation
+          activation = 0.5;
+        } else if (layerIndex === layers.length - 1) {
+          // Output layer - use output activation if available
+          if (sampleActivations.length > 0) {
+            const outputLayerIdx = sampleActivations.length - 1;
+            if (nodeIndex < sampleActivations[outputLayerIdx].length) {
+              activation = sampleActivations[outputLayerIdx][nodeIndex];
+            }
+          }
+        } else {
+          // Hidden layers
+          const activationLayerIdx = layerIndex - 1; // Adjust for input layer
+          if (activationLayerIdx < sampleActivations.length && nodeIndex < sampleActivations[activationLayerIdx].length) {
+            activation = sampleActivations[activationLayerIdx][nodeIndex];
+          }
         }
+        
+        // Color interpolation from green (low) to red (high)
+        const intensity = Math.min(Math.max(activation, 0), 1); // Clamp to [0,1]
+        nodeColor = new THREE.Color().lerpColors(lowActivationColor, highActivationColor, intensity);
+        
+        // Node size based on activation (subtle effect)
+        nodeSize = nodeRadius * (0.7 + 0.3 * intensity);
       }
       
       const geometry = new THREE.SphereGeometry(nodeSize, 16, 16);
@@ -122,100 +131,67 @@ export function createNeuralNetworkVisualization(
     // Create a group for connections between these layers
     const connectionGroup = new THREE.Group();
     
-    // Collect all weights for this layer to determine threshold for filtering
-    const allWeights: Array<{weight: number, i: number, j: number}> = [];
-    
-    if (networkInstance) {
-      for (let i = 0; i < currentDisplayCount; i++) {
-        const sourceNodeIndex = i * currentSkipFactor;
-        if (sourceNodeIndex >= currentLayerCount) continue;
-        
-        for (let j = 0; j < nextDisplayCount; j++) {
-          const targetNodeIndex = j * nextSkipFactor;
-          if (targetNodeIndex >= nextLayerCount) continue;
-          
-          const weight = networkInstance.getWeight(layerIndex, sourceNodeIndex, targetNodeIndex);
-          allWeights.push({ weight: Math.abs(weight), i, j });
-        }
-      }
-      
-      // Sort by weight magnitude and only show the strongest connections
-      allWeights.sort((a, b) => b.weight - a.weight);
-    }
-    
-    // Limit number of connections for visual clarity
-    const maxConnections = Math.min(50, allWeights.length || currentDisplayCount * nextDisplayCount / 10);
-    const connectionsToShow = networkInstance ? allWeights.slice(0, maxConnections) : [];
-    
-    // If no network instance, show a subset of random connections
-    if (!networkInstance) {
-      const connectionSubsample = Math.max(1, Math.floor(currentDisplayCount * nextDisplayCount / 100));
-      let connectionCount = 0;
-      
-      for (let i = 0; i < currentDisplayCount; i++) {
-        for (let j = 0; j < nextDisplayCount; j++) {
-          connectionCount++;
-          if (connectionCount % connectionSubsample !== 0) continue;
-          connectionsToShow.push({ weight: Math.random(), i, j });
-        }
-      }
-    }
-    
-    // Draw the selected connections with enhanced visualization
-    connectionsToShow.forEach(({ i, j }) => {
+    // Draw all connections using tube geometry
+    for (let i = 0; i < currentDisplayCount; i++) {
       const sourceNodeIndex = i * currentSkipFactor;
-      const targetNodeIndex = j * nextSkipFactor;
+      if (sourceNodeIndex >= currentLayerCount) continue;
       
-      // Get the actual weight (with sign) for coloring
-      let actualWeight: number;
-      if (networkInstance) {
-        actualWeight = networkInstance.getWeight(layerIndex, sourceNodeIndex, targetNodeIndex);
-      } else {
-        actualWeight = Math.random() * 2 - 1;
-      }
-      
-      // Enhanced color calculation with better contrast
-      const absWeight = Math.abs(actualWeight);
-      let weightColor: THREE.Color;
-      
-      if (actualWeight > 0) {
-        // Positive weights: Green to bright green
-        weightColor = new THREE.Color(0x27ae60).lerp(new THREE.Color(0x2ecc71), absWeight);
-      } else {
-        // Negative weights: Red to bright red  
-        weightColor = new THREE.Color(0xc0392b).lerp(new THREE.Color(0xe74c3c), absWeight);
-      }
-      
-      // Calculate positions
-      const startX = 0;
-      const startY = i * nodeSpacing - (currentDisplayCount * nodeSpacing) / 2 + nodeSpacing / 2;
-      const startZ = -layerIndex * layerSpacing;
-      
-      const endX = 0;
-      const endY = j * nodeSpacing - (nextDisplayCount * nodeSpacing) / 2 + nodeSpacing / 2;
-      const endZ = -(layerIndex + 1) * layerSpacing;
-      
-      // Create the line with variable thickness (simulate with multiple lines)
-      const lineThickness = Math.max(1, Math.floor(absWeight * 3));
-      
-      for (let thick = 0; thick < lineThickness; thick++) {
-        const offset = (thick - lineThickness/2) * 0.02;
-        const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(startX + offset, startY, startZ),
-          new THREE.Vector3(endX + offset, endY, endZ)
-        ]);
+      for (let j = 0; j < nextDisplayCount; j++) {
+        const targetNodeIndex = j * nextSkipFactor;
+        if (targetNodeIndex >= nextLayerCount) continue;
+        // Get the actual weight (with sign) for coloring
+        let actualWeight: number;
+        if (networkInstance) {
+          actualWeight = networkInstance.getWeight(layerIndex, sourceNodeIndex, targetNodeIndex);
+        } else {
+          actualWeight = Math.random() * 2 - 1;
+        }
         
-        // Enhanced line material with dynamic opacity
-        const lineMaterial = new THREE.LineBasicMaterial({ 
+        // Enhanced color calculation with better contrast
+        const absWeight = Math.abs(actualWeight);
+        let weightColor: THREE.Color;
+        
+        if (actualWeight > 0) {
+          // Positive weights: Green to bright green
+          weightColor = new THREE.Color(0x27ae60).lerp(new THREE.Color(0x2ecc71), absWeight);
+        } else {
+          // Negative weights: Red to bright red  
+          weightColor = new THREE.Color(0xc0392b).lerp(new THREE.Color(0xe74c3c), absWeight);
+        }
+        
+        // Calculate positions
+        const startX = 0;
+        const startY = i * nodeSpacing - (currentDisplayCount * nodeSpacing) / 2 + nodeSpacing / 2;
+        const startZ = -layerIndex * layerSpacing;
+        
+        const endX = 0;
+        const endY = j * nodeSpacing - (nextDisplayCount * nodeSpacing) / 2 + nodeSpacing / 2;
+        const endZ = -(layerIndex + 1) * layerSpacing;
+        
+        // Create tube geometry for the connection
+        const start = new THREE.Vector3(startX, startY, startZ);
+        const end = new THREE.Vector3(endX, endY, endZ);
+        
+        // Create a curve from start to end
+        const curve = new THREE.LineCurve3(start, end);
+        
+        // Tube radius based on weight magnitude (smaller scale)
+        const tubeRadius = Math.max(0.005, absWeight * 0.02);
+        
+        // Create tube geometry
+        const tubeGeometry = new THREE.TubeGeometry(curve, 8, tubeRadius, 6, false);
+        
+        // Enhanced tube material with dynamic opacity
+        const tubeMaterial = new THREE.MeshBasicMaterial({ 
           color: weightColor,
           transparent: true,
-          opacity: 0.3 + absWeight * 0.7 // Stronger weights are more visible
+          opacity: 0.4 + absWeight * 0.6 // Stronger weights are more visible
         });
         
-        const line = new THREE.Line(lineGeometry, lineMaterial);
-        connectionGroup.add(line);
+        const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+        connectionGroup.add(tube);
       }
-    });
+    }
     
     group.add(connectionGroup);
   }
