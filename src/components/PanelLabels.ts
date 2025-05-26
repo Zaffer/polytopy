@@ -31,21 +31,23 @@ export class PanelLabels {
     this.removeLabel(panelType);
     
     const title = PanelLabels.PANEL_TITLES[panelType];
-    const label = createTextSprite(title, 30, "rgba(0, 0, 0, 0.5)"); // Increased font size from 18 to 24
+    const label = createTextSprite(title, 30, "rgba(0, 0, 0, 0.5)");
     
     // Position label at the panel position
     label.position.copy(position);
     label.position.y += 4;
     
+    // Calculate Z-depth immediately if we have panel content
+    if (panelGroup && panelGroup.children.length > 0) {
+      panelGroup.updateMatrixWorld(true);
+      const boundingBox = new THREE.Box3().setFromObject(panelGroup);
+      if (boundingBox.min.z !== Infinity && boundingBox.max.z !== -Infinity) {
+        label.position.z = (boundingBox.min.z + boundingBox.max.z) / 2;
+      }
+    }
+    
     this.labels.set(panelType, label);
     this.labelGroup.add(label);
-    
-    // Defer Z-depth calculation to next frame to ensure objects are positioned
-    if (panelGroup) {
-      requestAnimationFrame(() => {
-        this.calculateAndSetZDepth(panelType, panelGroup);
-      });
-    }
   }
   
   /**
@@ -68,34 +70,14 @@ export class PanelLabels {
       label.position.copy(position);
       label.position.y += 4;
       
-      // Defer Z-depth calculation to next frame to ensure objects are positioned
-      if (panelGroup) {
-        requestAnimationFrame(() => {
-          this.calculateAndSetZDepth(panelType, panelGroup);
-        });
+      // Calculate Z-depth immediately if we have panel content
+      if (panelGroup && panelGroup.children.length > 0) {
+        panelGroup.updateMatrixWorld(true);
+        const boundingBox = new THREE.Box3().setFromObject(panelGroup);
+        if (boundingBox.min.z !== Infinity && boundingBox.max.z !== -Infinity) {
+          label.position.z = (boundingBox.min.z + boundingBox.max.z) / 2;
+        }
       }
-    }
-  }
-  
-  /**
-   * Calculate and set the Z-depth of a label based on panel content
-   */
-  private calculateAndSetZDepth(panelType: PanelType, panelGroup: THREE.Group): void {
-    const label = this.labels.get(panelType);
-    if (!label || !panelGroup || panelGroup.children.length === 0) {
-      return;
-    }
-    
-    // Force update matrices to ensure accurate bounding box calculation
-    panelGroup.updateMatrixWorld(true);
-    
-    // Calculate bounding box of the panel content
-    const boundingBox = new THREE.Box3().setFromObject(panelGroup);
-    
-    // Only update if bounding box is valid (not empty)
-    if (boundingBox.min.z !== Infinity && boundingBox.max.z !== -Infinity) {
-      const middleZ = (boundingBox.min.z + boundingBox.max.z) / 2;
-      label.position.z = middleZ;
     }
   }
   
@@ -113,7 +95,17 @@ export class PanelLabels {
    * Recalculate label Z-depth for a panel (useful when content changes)
    */
   public recalculateLabelDepth(panelType: PanelType, panelGroup: THREE.Group): void {
-    this.calculateAndSetZDepth(panelType, panelGroup);
+    const label = this.labels.get(panelType);
+    if (!label || !panelGroup || panelGroup.children.length === 0) {
+      return;
+    }
+    
+    panelGroup.updateMatrixWorld(true);
+    const boundingBox = new THREE.Box3().setFromObject(panelGroup);
+    
+    if (boundingBox.min.z !== Infinity && boundingBox.max.z !== -Infinity) {
+      label.position.z = (boundingBox.min.z + boundingBox.max.z) / 2;
+    }
   }
   
   /**
