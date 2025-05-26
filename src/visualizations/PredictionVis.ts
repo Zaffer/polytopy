@@ -48,15 +48,13 @@ export function createPredictionVisualization(predictions: number[][]): THREE.Gr
       
       // Force a minimum brightness difference between colors
       const range = Math.max(1, maxValue - minValue);
-      const normalizedValue = Math.max(0.2, Math.min(1, (safeValue - minValue) / range));
+      const normalizedValue = Math.max(0.1, Math.min(1, (safeValue - minValue) / range));
       
-      // Use a blue to red color spectrum
-      const r = normalizedValue * 0.8; // Red component increases with value
-      const b = (1 - normalizedValue) * 0.8; // Blue component decreases with value
-      const g = 0.1; // Very small green component for better visibility
+      // Use black to white gradient (grayscale)
+      const grayValue = normalizedValue; // 0 = black, 1 = white
       
       const material = new THREE.MeshBasicMaterial({ 
-        color: new THREE.Color(r, g, b), 
+        color: new THREE.Color(grayValue, grayValue, grayValue), 
         side: THREE.DoubleSide, 
         transparent: false
       });

@@ -17,8 +17,8 @@ export function createDataVisualization(data: number[][]): THREE.Group {
   
   const cellSize = 0.5;
   const spacing = 0.1;
-  const zeroMaterial = new THREE.MeshBasicMaterial({ color: 0x3498db, side: THREE.DoubleSide });
-  const oneMaterial = new THREE.MeshBasicMaterial({ color: 0xe74c3c, side: THREE.DoubleSide });
+  const zeroMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide }); // Black for 0
+  const oneMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }); // White for 1
 
   data.forEach((row, i) => {
     row.forEach((value, j) => {

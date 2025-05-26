@@ -130,8 +130,8 @@ export class SceneManager {
     this.panels.set(name, group);
     this.scene.add(group);
     
-    // Add label for this panel
-    this.panelLabels.setLabel(name, group.position);
+    // Add label for this panel with the panel group for Z-depth calculation
+    this.panelLabels.setLabel(name, group.position, group);
   }
   
   /**
@@ -146,8 +146,8 @@ export class SceneManager {
       this.scene.add(newGroup);
       this.panels.set(name, newGroup);
       
-      // Update label position
-      this.panelLabels.updateLabelPosition(name, newGroup.position);
+      // Update label position with the new panel group for Z-depth calculation
+      this.panelLabels.updateLabelPosition(name, newGroup.position, newGroup);
       
       // Reposition panels that come after this one
       this.repositionPanelsAfter(name);
@@ -196,8 +196,8 @@ export class SceneManager {
         }
         
         panel.position.z = currentDepth;
-        // Update label position
-        this.panelLabels.updateLabelPosition(panelType, panel.position);
+        // Update label position with panel group for Z-depth calculation
+        this.panelLabels.updateLabelPosition(panelType, panel.position, panel);
       }
     }
 
@@ -216,8 +216,8 @@ export class SceneManager {
           const depth = boundingBox.max.z - boundingBox.min.z;
           currentDepth = prevPanel.position.z - depth - this.config.panelSpacing;
           panel.position.z = currentDepth;
-          // Update label position
-          this.panelLabels.updateLabelPosition(panelType, panel.position);
+          // Update label position with panel group for Z-depth calculation
+          this.panelLabels.updateLabelPosition(panelType, panel.position, panel);
         }
       }
     }
