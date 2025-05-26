@@ -91,5 +91,5 @@ export const DEFAULT_VISUALIZATION_OPTIONS: VisualizationOptions = {
   showTrainingData: true,
   showNeuralNetwork: true,
   showPredictions: true,
-  showPolytopes: false,
+  showPolytopes: true,
 };

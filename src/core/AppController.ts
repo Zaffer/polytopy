@@ -201,6 +201,13 @@ export class AppController {
   }
   
   /**
+   * Get the data grid size
+   */
+  public getDataGridSize(): { width: number; height: number } {
+    return this.dataManager.getGridSize();
+  }
+  
+  /**
    * Clean up resources
    */
   public dispose(): void {

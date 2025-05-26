@@ -8,16 +8,25 @@ export function createPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork)
     return group;
   }
 
-  const gridSize = 80;
-  const range = 5;
-  const step = (2 * range) / gridSize;
+  // Use same scaling as the prediction visualization
+  const cellSize = 0.5;
+  const spacing = 0.1;
+  
+  // Assume a typical 10x10 grid for scaling (same as other visualizations)
+  const gridCells = 10;
+  const totalSize = gridCells * (cellSize + spacing);
+  const range = totalSize / 2;
+  
+  // Higher resolution for smoother polytope boundaries
+  const resolution = 80;
+  const step = (2 * range) / resolution;
   
   // Create 2D grid of activation patterns
   const patternGrid: string[][] = [];
   
-  for (let i = 0; i <= gridSize; i++) {
+  for (let i = 0; i <= resolution; i++) {
     patternGrid[i] = [];
-    for (let j = 0; j <= gridSize; j++) {
+    for (let j = 0; j <= resolution; j++) {
       const x = -range + j * step;
       const y = range - i * step;  // Flip y-axis: top row (i=0) maps to y=+range
       
@@ -34,14 +43,14 @@ export function createPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork)
   }
   
   // Find regions and draw polygons
-  const visited = Array(gridSize + 1).fill(null).map(() => Array(gridSize + 1).fill(false));
+  const visited = Array(resolution + 1).fill(null).map(() => Array(resolution + 1).fill(false));
   const regions: { pattern: string; points: THREE.Vector2[] }[] = [];
   
-  for (let i = 0; i <= gridSize; i++) {
-    for (let j = 0; j <= gridSize; j++) {
+  for (let i = 0; i <= resolution; i++) {
+    for (let j = 0; j <= resolution; j++) {
       if (!visited[i][j]) {
         const pattern = patternGrid[i][j];
-        const boundary = findRegionBoundary(patternGrid, i, j, visited, gridSize, range, step);
+        const boundary = findRegionBoundary(patternGrid, i, j, visited, resolution, range, step);
         
         if (boundary.length >= 3) {
           regions.push({ pattern, points: boundary });
@@ -111,7 +120,7 @@ function findRegionBoundary(
   startJ: number, 
   visited: boolean[][], 
   gridSize: number, 
-  range: number, 
+  range: number,
   step: number
 ): THREE.Vector2[] {
   const pattern = grid[startI][startJ];

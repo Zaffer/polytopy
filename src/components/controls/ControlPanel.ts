@@ -205,7 +205,7 @@ export function setupControls(appController: AppController): HTMLElement {
     uiManager.onPanelVisibilityChange("predictions", checked);
   });
   
-  const polytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes", false, (checked) => {
+  const polytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes", true, (checked) => {
     uiManager.onPanelVisibilityChange("polytopes", checked);
   });
   

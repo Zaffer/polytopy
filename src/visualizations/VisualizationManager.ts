@@ -26,6 +26,13 @@ export class VisualizationManager {
   }
   
   /**
+   * Set the training manager reference
+   */
+  public setTrainingManager(trainingManager: TrainingManager): void {
+    this.trainingManager = trainingManager;
+  }
+  
+  /**
    * Clean up subscriptions
    */
   public dispose(): void {
