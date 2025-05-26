@@ -237,6 +237,29 @@ export class SceneManager {
   }
   
   /**
+   * Show or hide a panel
+   */
+  public setPanelVisibility(name: PanelType, visible: boolean): void {
+    const panel = this.panels.get(name);
+    if (panel) {
+      panel.visible = visible;
+      this.panelLabels.setLabelVisibility(name, visible);
+    }
+  }
+
+  /**
+   * Update panel content and visibility
+   */
+  public updatePanelWithVisibility(name: PanelType, newGroup: THREE.Group, visible: boolean): void {
+    if (visible) {
+      this.updatePanel(name, newGroup);
+      this.setPanelVisibility(name, true);
+    } else {
+      this.setPanelVisibility(name, false);
+    }
+  }
+  
+  /**
    * Reset camera to default position
    */
   public resetCamera(): void {

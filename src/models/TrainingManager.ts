@@ -19,6 +19,9 @@ export class TrainingManager {
   // Observable for weight updates during training 
   private weightsUpdateSubject = new Subject<void>();
   
+  // Observable for network recreation (topology changes)
+  private networkRecreatedSubject = new Subject<void>();
+  
   // Signal to stop current training
   private stopTraining$ = new Subject<void>();
   
@@ -48,6 +51,7 @@ export class TrainingManager {
           config.learningRate
         );
         this.updatePredictions();
+        this.networkRecreatedSubject.next(); // Notify that network was recreated
       }
     });
   }
@@ -78,6 +82,13 @@ export class TrainingManager {
    */
   public getWeightsUpdate$(): Observable<void> {
     return this.weightsUpdateSubject.asObservable();
+  }
+
+  /**
+   * Get observable for network recreation (topology changes)
+   */
+  public getNetworkRecreated$(): Observable<void> {
+    return this.networkRecreatedSubject.asObservable();
   }
   
   /**

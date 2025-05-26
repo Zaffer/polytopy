@@ -82,7 +82,7 @@ export class PanelLabels {
   }
   
   /**
-   * Set visibility of a panel label
+   * Set the visibility of a label
    */
   public setLabelVisibility(panelType: PanelType, visible: boolean): void {
     const label = this.labels.get(panelType);
