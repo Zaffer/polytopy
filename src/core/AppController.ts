@@ -64,13 +64,12 @@ export class AppController {
    * Regenerate training data
    */
   public regenerateData(width: number, height: number, patternType?: PatternType): void {
-    // Only allow regenerating data if not currently training
-    if (!this.appState.trainingConfig.getValue().isTraining) {
-      // Use current pattern type if not provided
-      const currentPatternType = patternType || this.appState.trainingConfig.getValue().patternType;
-      this.dataManager.regenerateData(width, height, currentPatternType);
-      this.trainingManager.resetTraining();
-    }
+    // Use current pattern type if not provided
+    const currentPatternType = patternType || this.appState.trainingConfig.getValue().patternType;
+    this.dataManager.regenerateData(width, height, currentPatternType);
+    
+    // Update predictions to reflect the new data but don't reset the network
+    // The network will continue training on the new data
   }
   
   /**

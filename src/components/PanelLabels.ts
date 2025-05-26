@@ -35,7 +35,7 @@ export class PanelLabels {
     
     // Position label at the panel position
     label.position.copy(position);
-    label.position.y += 4;
+    label.position.y += 5;
     
     // Calculate Z-depth immediately if we have panel content
     if (panelGroup && panelGroup.children.length > 0) {
@@ -68,7 +68,7 @@ export class PanelLabels {
     const label = this.labels.get(panelType);
     if (label) {
       label.position.copy(position);
-      label.position.y += 4;
+      label.position.y += 5;
       
       // Calculate Z-depth immediately if we have panel content
       if (panelGroup && panelGroup.children.length > 0) {
