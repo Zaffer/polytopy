@@ -12,9 +12,6 @@ export function createPredictionVisualization(predictions: number[][]): THREE.Gr
   const cellSize = 0.5;
   const spacing = 0.1;
 
-  // Log the prediction values for debugging
-  console.log("Prediction values sample:", predictions[0].slice(0, 3));
-  
   // Find min and max values for better color scaling
   let minValue = Number.MAX_VALUE;
   let maxValue = Number.MIN_VALUE;
@@ -36,8 +33,6 @@ export function createPredictionVisualization(predictions: number[][]): THREE.Gr
     minValue = 0;
     maxValue = 5;
   }
-  
-  console.log(`Prediction range: min=${minValue}, max=${maxValue}`);
 
   predictions.forEach((row, i) => {
     row.forEach((value, j) => {

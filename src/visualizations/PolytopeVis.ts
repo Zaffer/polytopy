@@ -97,14 +97,17 @@ export function createPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork)
       group.add(mesh);
       
       // Add border
-      const borderGeometry = new THREE.BufferGeometry().setFromPoints(
-        validPoints.map(p => new THREE.Vector3(p.x, p.y, 0.01))
-      );
+      const borderPoints = validPoints.map(p => new THREE.Vector3(p.x, p.y, 0.01));
+      // Close the loop by adding the first point at the end
+      if (borderPoints.length > 0) {
+        borderPoints.push(borderPoints[0]);
+      }
+      const borderGeometry = new THREE.BufferGeometry().setFromPoints(borderPoints);
       const borderMaterial = new THREE.LineBasicMaterial({ 
         color: color.clone().multiplyScalar(0.6),
         linewidth: 1 
       });
-      const border = new THREE.LineLoop(borderGeometry, borderMaterial);
+      const border = new THREE.Line(borderGeometry, borderMaterial);
       group.add(border);
     } catch (error) {
       console.warn("Failed to create polygon for pattern:", pattern, error);

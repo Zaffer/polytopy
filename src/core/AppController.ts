@@ -204,7 +204,11 @@ export class AppController {
    * Get the data grid size
    */
   public getDataGridSize(): { width: number; height: number } {
-    return this.dataManager.getGridSize();
+    const currentData = this.dataManager.getCurrentData();
+    return {
+      width: currentData[0]?.length || 10,
+      height: currentData.length || 10
+    };
   }
   
   /**
