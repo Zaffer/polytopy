@@ -53,6 +53,16 @@ export class SceneManager {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.1;
     
+    // Custom mouse controls:
+    // - Left click (MOUSE.LEFT) = Pan/drag the camera
+    // - Middle click (MOUSE.MIDDLE) = Rotate/orbit around target
+    // - Right click (MOUSE.RIGHT) = Disabled (do nothing)
+    this.controls.mouseButtons = {
+      LEFT: THREE.MOUSE.PAN,     // Left click to drag/pan
+      MIDDLE: THREE.MOUSE.ROTATE, // Middle click to rotate/orbit
+      RIGHT: null                 // Right click disabled
+    };
+    
     // Add lights
     this.addLights();
     

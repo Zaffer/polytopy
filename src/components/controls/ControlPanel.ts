@@ -141,7 +141,7 @@ export function setupControls(appController: AppController): HTMLElement {
    // Data and visualization controls
   const dataFieldset = document.createElement('fieldset');
   const dataLegend = document.createElement('legend');
-  dataLegend.textContent = 'Data Controls';
+  dataLegend.textContent = 'Input Data';
   dataFieldset.appendChild(dataLegend);
   controlsPanel.appendChild(dataFieldset);
 
@@ -189,7 +189,7 @@ export function setupControls(appController: AppController): HTMLElement {
   // Panel visibility checkboxes
   const visibilityFieldset = document.createElement('fieldset');
   const visibilityLegend = document.createElement('legend');
-  visibilityLegend.textContent = 'Visibility Settings';
+  visibilityLegend.textContent = 'Visualisation Panels';
   visibilityFieldset.appendChild(visibilityLegend);
   controlsPanel.appendChild(visibilityFieldset);
   

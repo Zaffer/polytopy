@@ -1,4 +1,5 @@
-import { Observable, Subscription } from "rxjs";
+import { Observable, Subscription, combineLatest } from "rxjs";
+import { filter } from "rxjs/operators";
 
 import { SceneManager } from "../core/SceneManager";
 import { PanelType } from "../types/scene";
@@ -46,9 +47,13 @@ export class VisualizationManager {
    */
   public updateDataVisualization(data$: Observable<number[][]>): void {
     this.subscriptions.push(
-      data$.subscribe(data => {
+      combineLatest([
+        data$,
+        this.appState.visualizationOptions
+      ]).pipe(
+        filter(([data, options]) => options.showTrainingData && data.length > 0)
+      ).subscribe(([data, options]) => {
         const visualization = createDataVisualization(data);
-        const options = this.appState.visualizationOptions.getValue();
         this.sceneManager.updatePanelWithVisibility(
           PanelType.TRAINING_DATA, 
           visualization, 
@@ -65,16 +70,20 @@ export class VisualizationManager {
     // Store the training manager for use in subscriptions
     this.trainingManager = trainingManager;
     
-    // Subscribe to network config changes
+    // Subscribe to network config changes only when neural network is visible
     this.subscriptions.push(
-      this.appState.networkConfig.subscribe(config => {
+      combineLatest([
+        this.appState.networkConfig,
+        this.appState.visualizationOptions
+      ]).pipe(
+        filter(([_, options]) => options.showNeuralNetwork)
+      ).subscribe(([config, options]) => {
         const networkInstance = this.trainingManager?.getNeuralNetwork();
         const visualization = createNeuralNetworkVisualization({
           inputSize: config.inputSize,
           hiddenSizes: config.hiddenSizes,
           outputSize: config.outputSize
         }, networkInstance);
-        const options = this.appState.visualizationOptions.getValue();
         this.sceneManager.updatePanelWithVisibility(
           PanelType.NEURAL_NETWORK, 
           visualization, 
@@ -83,10 +92,15 @@ export class VisualizationManager {
       })
     );
 
-    // Subscribe to real-time weight updates during training
+    // Subscribe to real-time weight updates during training only when neural network is visible
     if (this.trainingManager) {
       this.subscriptions.push(
-        this.trainingManager.getWeightsUpdate$().subscribe(() => {
+        combineLatest([
+          this.trainingManager.getWeightsUpdate$(),
+          this.appState.visualizationOptions
+        ]).pipe(
+          filter(([_, options]) => options.showNeuralNetwork)
+        ).subscribe(([_, options]) => {
           const config = this.appState.networkConfig.getValue();
           const networkInstance = this.trainingManager?.getNeuralNetwork();
           const visualization = createNeuralNetworkVisualization({
@@ -94,7 +108,6 @@ export class VisualizationManager {
             hiddenSizes: config.hiddenSizes,
             outputSize: config.outputSize
           }, networkInstance);
-          const options = this.appState.visualizationOptions.getValue();
           this.sceneManager.updatePanelWithVisibility(
             PanelType.NEURAL_NETWORK, 
             visualization, 
@@ -110,11 +123,13 @@ export class VisualizationManager {
    */
   public updatePredictionVisualization(predictions$: Observable<number[][]>): void {
     this.subscriptions.push(
-      predictions$.subscribe(predictions => {
-        if (predictions.length === 0) return;
-        
+      combineLatest([
+        predictions$,
+        this.appState.visualizationOptions
+      ]).pipe(
+        filter(([predictions, options]) => options.showPredictions && predictions.length > 0)
+      ).subscribe(([predictions, options]) => {
         const visualization = createPredictionVisualization(predictions);
-        const options = this.appState.visualizationOptions.getValue();
         this.sceneManager.updatePanelWithVisibility(
           PanelType.PREDICTIONS, 
           visualization, 
@@ -128,9 +143,11 @@ export class VisualizationManager {
    * Create or update the polytope visualization
    */
   public updatePolytopeVisualization(): void {
-    // Subscribe to visualization options changes
+    // Subscribe to visualization options changes only when polytopes are visible
     this.subscriptions.push(
-      this.appState.visualizationOptions.subscribe(options => {
+      this.appState.visualizationOptions.pipe(
+        filter(options => options.showPolytopes)
+      ).subscribe(options => {
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
           const visualization = createSampledPolytopeVisualization(networkInstance);
@@ -143,10 +160,14 @@ export class VisualizationManager {
       })
     );
 
-    // Subscribe to network config changes (topology changes)
+    // Subscribe to network config changes only when polytopes are visible
     this.subscriptions.push(
-      this.appState.networkConfig.subscribe(() => {
-        const options = this.appState.visualizationOptions.getValue();
+      combineLatest([
+        this.appState.networkConfig,
+        this.appState.visualizationOptions
+      ]).pipe(
+        filter(([_, options]) => options.showPolytopes)
+      ).subscribe(([_, options]) => {
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
           const visualization = createSampledPolytopeVisualization(networkInstance);
@@ -159,11 +180,15 @@ export class VisualizationManager {
       })
     );
 
-    // Subscribe to network recreation events
+    // Subscribe to network recreation events only when polytopes are visible
     if (this.trainingManager) {
       this.subscriptions.push(
-        this.trainingManager.getNetworkRecreated$().subscribe(() => {
-          const options = this.appState.visualizationOptions.getValue();
+        combineLatest([
+          this.trainingManager.getNetworkRecreated$(),
+          this.appState.visualizationOptions
+        ]).pipe(
+          filter(([_, options]) => options.showPolytopes)
+        ).subscribe(([_, options]) => {
           const networkInstance = this.trainingManager!.getNeuralNetwork();
           const visualization = createSampledPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
@@ -175,11 +200,15 @@ export class VisualizationManager {
       );
     }
 
-    // Also update when weights change during training
+    // Also update when weights change during training only when polytopes are visible
     if (this.trainingManager) {
       this.subscriptions.push(
-        this.trainingManager.getWeightsUpdate$().subscribe(() => {
-          const options = this.appState.visualizationOptions.getValue();
+        combineLatest([
+          this.trainingManager.getWeightsUpdate$(),
+          this.appState.visualizationOptions
+        ]).pipe(
+          filter(([_, options]) => options.showPolytopes)
+        ).subscribe(([_, options]) => {
           const networkInstance = this.trainingManager!.getNeuralNetwork();
           const visualization = createSampledPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
@@ -196,9 +225,11 @@ export class VisualizationManager {
    * Create or update the analytical polytope visualization (PolytopeVis2)
    */
   public updateAnalyticalPolytopeVisualization(): void {
-    // Subscribe to visualization options changes
+    // Subscribe to visualization options changes only when analytical polytopes are visible
     this.subscriptions.push(
-      this.appState.visualizationOptions.subscribe(options => {
+      this.appState.visualizationOptions.pipe(
+        filter(options => options.showAnalyticalPolytopes)
+      ).subscribe(options => {
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
           const visualization = createAnalyticPolytopeVisualization(networkInstance);
@@ -211,10 +242,14 @@ export class VisualizationManager {
       })
     );
 
-    // Subscribe to network config changes (topology changes)
+    // Subscribe to network config changes only when analytical polytopes are visible
     this.subscriptions.push(
-      this.appState.networkConfig.subscribe(() => {
-        const options = this.appState.visualizationOptions.getValue();
+      combineLatest([
+        this.appState.networkConfig,
+        this.appState.visualizationOptions
+      ]).pipe(
+        filter(([_, options]) => options.showAnalyticalPolytopes)
+      ).subscribe(([_, options]) => {
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
           const visualization = createAnalyticPolytopeVisualization(networkInstance);
@@ -227,11 +262,15 @@ export class VisualizationManager {
       })
     );
 
-    // Subscribe to network recreation events
+    // Subscribe to network recreation events only when analytical polytopes are visible
     if (this.trainingManager) {
       this.subscriptions.push(
-        this.trainingManager.getNetworkRecreated$().subscribe(() => {
-          const options = this.appState.visualizationOptions.getValue();
+        combineLatest([
+          this.trainingManager.getNetworkRecreated$(),
+          this.appState.visualizationOptions
+        ]).pipe(
+          filter(([_, options]) => options.showAnalyticalPolytopes)
+        ).subscribe(([_, options]) => {
           const networkInstance = this.trainingManager!.getNeuralNetwork();
           const visualization = createAnalyticPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
@@ -243,11 +282,15 @@ export class VisualizationManager {
       );
     }
 
-    // Also update when weights change during training
+    // Also update when weights change during training only when analytical polytopes are visible
     if (this.trainingManager) {
       this.subscriptions.push(
-        this.trainingManager.getWeightsUpdate$().subscribe(() => {
-          const options = this.appState.visualizationOptions.getValue();
+        combineLatest([
+          this.trainingManager.getWeightsUpdate$(),
+          this.appState.visualizationOptions
+        ]).pipe(
+          filter(([_, options]) => options.showAnalyticalPolytopes)
+        ).subscribe(([_, options]) => {
           const networkInstance = this.trainingManager!.getNeuralNetwork();
           const visualization = createAnalyticPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
@@ -264,9 +307,11 @@ export class VisualizationManager {
    * Create or update the lines visualization
    */
   public updateLinesVisualization(): void {
-    // Subscribe to visualization options changes
+    // Subscribe to visualization options changes only when lines are visible
     this.subscriptions.push(
-      this.appState.visualizationOptions.subscribe(options => {
+      this.appState.visualizationOptions.pipe(
+        filter(options => options.showLines)
+      ).subscribe(options => {
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
           const visualization = createLinesVisualization(networkInstance);
@@ -279,10 +324,14 @@ export class VisualizationManager {
       })
     );
 
-    // Subscribe to network config changes (topology changes)
+    // Subscribe to network config changes only when lines are visible
     this.subscriptions.push(
-      this.appState.networkConfig.subscribe(() => {
-        const options = this.appState.visualizationOptions.getValue();
+      combineLatest([
+        this.appState.networkConfig,
+        this.appState.visualizationOptions
+      ]).pipe(
+        filter(([_, options]) => options.showLines)
+      ).subscribe(([_, options]) => {
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
           const visualization = createLinesVisualization(networkInstance);
@@ -295,11 +344,15 @@ export class VisualizationManager {
       })
     );
 
-    // Subscribe to network recreation events
+    // Subscribe to network recreation events only when lines are visible
     if (this.trainingManager) {
       this.subscriptions.push(
-        this.trainingManager.getNetworkRecreated$().subscribe(() => {
-          const options = this.appState.visualizationOptions.getValue();
+        combineLatest([
+          this.trainingManager.getNetworkRecreated$(),
+          this.appState.visualizationOptions
+        ]).pipe(
+          filter(([_, options]) => options.showLines)
+        ).subscribe(([_, options]) => {
           const networkInstance = this.trainingManager!.getNeuralNetwork();
           const visualization = createLinesVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
@@ -311,11 +364,15 @@ export class VisualizationManager {
       );
     }
 
-    // Also update when weights change during training
+    // Also update when weights change during training only when lines are visible
     if (this.trainingManager) {
       this.subscriptions.push(
-        this.trainingManager.getWeightsUpdate$().subscribe(() => {
-          const options = this.appState.visualizationOptions.getValue();
+        combineLatest([
+          this.trainingManager.getWeightsUpdate$(),
+          this.appState.visualizationOptions
+        ]).pipe(
+          filter(([_, options]) => options.showLines)
+        ).subscribe(([_, options]) => {
           const networkInstance = this.trainingManager!.getNeuralNetwork();
           const visualization = createLinesVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(

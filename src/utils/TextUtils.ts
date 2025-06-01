@@ -1,13 +1,30 @@
 import * as THREE from "three";
 
 /**
- * Simple text sprite creation - just make it work and look good!
+ * Create text sprite that automatically sizes to fit the text content
  */
 export function createTextSprite(text: string, fontSize: number = 16, backgroundColor: string = "rgba(0, 0, 0, 0)"): THREE.Sprite {
-  // Simple canvas - no pixel ratio complexity
+  // Create a temporary canvas to measure text dimensions
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+  if (!tempCtx) {
+    return new THREE.Sprite();
+  }
+  
+  // Set font to measure text
+  const scaledFontSize = fontSize * 2; // Scale up font for canvas
+  tempCtx.font = `bold ${scaledFontSize}px Arial`;
+  const textMetrics = tempCtx.measureText(text);
+  
+  // Calculate canvas dimensions based on text size with padding
+  const padding = scaledFontSize * 0.5; // 50% of font size for padding
+  const canvasWidth = Math.max(textMetrics.width + padding * 2, scaledFontSize * 2); // Minimum width
+  const canvasHeight = scaledFontSize * 1.5; // Height based on font size
+  
+  // Create actual canvas with measured dimensions
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 128;
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
   
   const ctx = canvas.getContext('2d');
   if (!ctx) {
@@ -20,9 +37,9 @@ export function createTextSprite(text: string, fontSize: number = 16, background
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
   
-  // Simple text rendering
+  // Text rendering
   ctx.fillStyle = 'white';
-  ctx.font = `bold ${fontSize * 2}px Arial`; // Scale up font for canvas
+  ctx.font = `bold ${scaledFontSize}px Arial`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
@@ -36,9 +53,11 @@ export function createTextSprite(text: string, fontSize: number = 16, background
     transparent: true
   });
   
-  // Create sprite with simple, fixed scale
+  // Create sprite with scale proportional to text width
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(2, 0.5, 1); // Wide and short for good readability
+  const aspectRatio = canvasWidth / canvasHeight;
+  const baseHeight = 0.5; // Keep consistent height
+  sprite.scale.set(aspectRatio * baseHeight, baseHeight, 1);
   
   return sprite;
 }
