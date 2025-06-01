@@ -165,9 +165,14 @@ function computeAnalyticalPolytopes(
  * as linear inequalities in input space (x, y).
  * 
  * CRITICAL: We need to properly handle coordinate transformations:
- * - Network expects normalized inputs: [colNormalized, rowNormalized] ∈ [0,1]²
+ * - Network expects normalized inputs: [rowNormalized, colNormalized] ∈ [0,1]²
  * - Constraints are solved in world space: (x, y) ∈ [-range, range]²
- * - Transformation: colNormalized = (x + range)/(2*range), rowNormalized = (range - y)/(2*range)
+ * - Transformation: rowNormalized = (range - y)/(2*range), colNormalized = (x + range)/(2*range)
+ * 
+ * COORDINATE SYSTEM:
+ * - Neural network input: [rowNormalized, colNormalized] (matches training data format)
+ * - World coordinates: (x, y) where x is horizontal, y is vertical
+ * - The weight matrix indices: weights[0][i] = w_row, weights[1][i] = w_col
  */
 function buildMultiLayerConstraints(
   network: SimpleNeuralNetwork,
@@ -204,25 +209,25 @@ function buildMultiLayerConstraints(
   
   for (let i = 0; i < hiddenSizes[0]; i++) {
     const isActive = layerActivations[0][i];
-    const w_col = layer1Weights[0][i];  // Weight for normalized column input
-    const w_row = layer1Weights[1][i];  // Weight for normalized row input
+    const w_row = layer1Weights[0][i];  // Weight for normalized row input (first parameter)
+    const w_col = layer1Weights[1][i];  // Weight for normalized column input (second parameter)
     const bias = layer1Biases[i];
     
-    // Network computes: ReLU(w_col * colNormalized + w_row * rowNormalized + bias)
-    // Where: colNormalized = (x + range)/(2*range), rowNormalized = (range - y)/(2*range)
+    // Network computes: ReLU(w_row * rowNormalized + w_col * colNormalized + bias)
+    // Where: rowNormalized = (range - y)/(2*range), colNormalized = (x + range)/(2*range)
     // 
     // Substituting:
-    // ReLU(w_col * (x + range)/(2*range) + w_row * (range - y)/(2*range) + bias)
-    // = ReLU((w_col * (x + range) + w_row * (range - y))/(2*range) + bias)
-    // = ReLU((w_col * x + w_col * range + w_row * range - w_row * y)/(2*range) + bias)
-    // = ReLU((w_col * x - w_row * y + range * (w_col + w_row))/(2*range) + bias)
+    // ReLU(w_row * (range - y)/(2*range) + w_col * (x + range)/(2*range) + bias)
+    // = ReLU((w_row * (range - y) + w_col * (x + range))/(2*range) + bias)
+    // = ReLU((w_row * range - w_row * y + w_col * x + w_col * range)/(2*range) + bias)
+    // = ReLU((w_col * x - w_row * y + range * (w_row + w_col))/(2*range) + bias)
     // 
-    // For constraint: (w_col * x - w_row * y + range * (w_col + w_row))/(2*range) + bias ≥ 0 (if active)
-    // Multiply by 2*range: w_col * x - w_row * y + range * (w_col + w_row) + bias * 2 * range ≥ 0
+    // For constraint: (w_col * x - w_row * y + range * (w_row + w_col))/(2*range) + bias ≥ 0 (if active)
+    // Multiply by 2*range: w_col * x - w_row * y + range * (w_row + w_col) + bias * 2 * range ≥ 0
     
     const a = w_col;
     const b = -w_row;
-    const c = range * (w_col + w_row) + bias * 2 * range;
+    const c = range * (w_row + w_col) + bias * 2 * range;
     
     if (isActive) {
       // Neuron is active: constraint ≥ 0
