@@ -16,12 +16,50 @@ export function setupControls(appController: AppController): HTMLElement {
   // Create UI manager to handle reactive updates
   const uiManager = new ControlManager(appController);
 
+  // Create main wrapper fieldset for the entire control panel
+  const mainFieldset = document.createElement('fieldset');
+  const mainLegend = document.createElement('legend');
+  
+  // Create collapsible toggle button and title
+  const toggleButton = document.createElement('span');
+  toggleButton.textContent = '[-] ';
+  toggleButton.style.cursor = 'pointer';
+  toggleButton.style.userSelect = 'none';
+  toggleButton.style.fontFamily = 'monospace';
+  
+  const titleSpan = document.createElement('span');
+  titleSpan.textContent = 'Control Panel';
+  
+  mainLegend.appendChild(toggleButton);
+  mainLegend.appendChild(titleSpan);
+  mainLegend.style.cursor = 'pointer';
+  
+  // Create container for all collapsible content
+  const collapsibleContent = document.createElement('div');
+  
+  mainFieldset.appendChild(mainLegend);
+  mainFieldset.appendChild(collapsibleContent);
+  controlsPanel.appendChild(mainFieldset);
+  
+  // Add click handler for collapse/expand
+  let isCollapsed = false;
+  mainLegend.addEventListener('click', () => {
+    isCollapsed = !isCollapsed;
+    if (isCollapsed) {
+      toggleButton.textContent = '[+] ';
+      collapsibleContent.style.display = 'none';
+    } else {
+      toggleButton.textContent = '[-] ';
+      collapsibleContent.style.display = 'block';
+    }
+  });
+
   // Training controls with emoji buttons
   const controlsFieldset = document.createElement('fieldset');
   const controlsLegend = document.createElement('legend');
   controlsLegend.textContent = 'Training Controls';
   controlsFieldset.appendChild(controlsLegend);
-  controlsPanel.appendChild(controlsFieldset);
+  collapsibleContent.appendChild(controlsFieldset);
   
   // Training controls container
   const buttonContainer = document.createElement('div');
@@ -101,7 +139,7 @@ export function setupControls(appController: AppController): HTMLElement {
   const architectureLegend = document.createElement('legend');
   architectureLegend.textContent = 'Network Architecture';
   architectureFieldset.appendChild(architectureLegend);
-  controlsPanel.appendChild(architectureFieldset);
+  collapsibleContent.appendChild(architectureFieldset);
   
   const networkDepthSlider = addSlider(architectureFieldset, "Network Depth", 1, 5, 2, 1, (value) => {
     uiManager.onNetworkDepthChange(value);
@@ -116,7 +154,7 @@ export function setupControls(appController: AppController): HTMLElement {
   const paramsLegend = document.createElement('legend');
   paramsLegend.textContent = 'Training Parameters';
   paramsFieldset.appendChild(paramsLegend);
-  controlsPanel.appendChild(paramsFieldset);
+  collapsibleContent.appendChild(paramsFieldset);
   
   const epochsSlider = addSlider(paramsFieldset, "Epochs", 10, 1000, 500, 10, (value) => {
     uiManager.onEpochsChange(value);
@@ -143,7 +181,7 @@ export function setupControls(appController: AppController): HTMLElement {
   const dataLegend = document.createElement('legend');
   dataLegend.textContent = 'Input Data';
   dataFieldset.appendChild(dataLegend);
-  controlsPanel.appendChild(dataFieldset);
+  collapsibleContent.appendChild(dataFieldset);
 
   // Pattern selection radio buttons
   const patternOptions = [
@@ -191,7 +229,7 @@ export function setupControls(appController: AppController): HTMLElement {
   const visibilityLegend = document.createElement('legend');
   visibilityLegend.textContent = 'Visualisation Panels';
   visibilityFieldset.appendChild(visibilityLegend);
-  controlsPanel.appendChild(visibilityFieldset);
+  collapsibleContent.appendChild(visibilityFieldset);
   
   const trainingDataCheckbox = addCheckbox(visibilityFieldset, "Training Data", true, (checked) => {
     uiManager.onPanelVisibilityChange("trainingData", checked);

@@ -96,7 +96,7 @@ export function createSampledPolytopeVisualization(neuralNetwork?: SimpleNeuralN
       const mesh = new THREE.Mesh(geometry, material);
       group.add(mesh);
     } catch (error) {
-      console.warn("Failed to create polygon for pattern:", pattern, error);
+      // Silent error handling for polygon creation
     }
   });
   

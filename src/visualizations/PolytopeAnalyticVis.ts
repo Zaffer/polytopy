@@ -15,9 +15,6 @@ export function createAnalyticPolytopeVisualization(neuralNetwork?: SimpleNeural
   const totalSize = gridCells * (cellSize + spacing);
   const range = totalSize / 2;
   
-  // Simplified logging
-  console.log(`Analytic polytope range: [-${range}, ${range}]`);
-  
   // Compute polytopes analytically from ReLU network structure
   const polytopes = computeAnalyticalPolytopes(neuralNetwork, range);
   
@@ -49,7 +46,7 @@ export function createAnalyticPolytopeVisualization(neuralNetwork?: SimpleNeural
       
       group.add(mesh);
     } catch (error) {
-      console.warn("Failed to create analytical polytope:", pattern, error);
+      // Silent error handling for polytope creation
     }
   });
   
@@ -68,7 +65,6 @@ function computeAnalyticalPolytopes(
   
   // Discover activation patterns via sampling
   const patterns = discoverActivationPatterns(network, range);
-  console.log(`Found ${patterns.size} activation patterns`);
   
   // Build polytopes from patterns
   const polytopes: Array<{ pattern: string; vertices: Array<{ x: number; y: number }> }> = [];
@@ -83,11 +79,10 @@ function computeAnalyticalPolytopes(
         polytopes.push({ pattern, vertices });
       }
     } catch (error) {
-      console.warn(`Failed to build polytope for pattern ${pattern}:`, error);
+      // Silent error handling for polytope pattern building
     }
   }
   
-  console.log(`Generated ${polytopes.length} valid polytopes`);
   return polytopes;
 }
 

@@ -168,7 +168,10 @@ export class SceneManager {
     this.selectionIndicator.dispose();
     this.renderer.setAnimationLoop(null);
     window.removeEventListener("resize", this.onWindowResize.bind(this));
-    this.renderer.domElement.removeEventListener('contextmenu', this.onRightClick.bind(this));
+    this.renderer.domElement.removeEventListener('mousedown', this.onMouseDown.bind(this));
+    this.renderer.domElement.removeEventListener('mousemove', this.onMouseMove.bind(this));
+    this.renderer.domElement.removeEventListener('mouseup', this.onMouseUp.bind(this));
+    this.renderer.domElement.removeEventListener('contextmenu', this.onContextMenu.bind(this));
   }
   
   // Panel management methods
