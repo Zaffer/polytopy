@@ -7,7 +7,7 @@ import { createDataVisualization } from "./DataVis";
 import { createNeuralNetworkVisualization } from "./NetworkVis";
 import { createPredictionVisualization } from "./PredictionVis";
 import { createPolytopeVisualization } from "./PolytopeVis";
-import { createPolytopeVisualization as createAnalyticalPolytopeVisualization } from "./PolytopeVis2";
+import { createAnalyticalPolytopeVisualization } from "./PolytopeVis2";
 import { TrainingManager } from "../models/TrainingManager";
 
 /**

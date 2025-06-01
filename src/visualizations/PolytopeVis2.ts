@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { SimpleNeuralNetwork } from "../models/NeuralNetworkTrainer";
 
-export function createPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork): THREE.Group {
+export function createAnalyticalPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork): THREE.Group {
   const group = new THREE.Group();
   
   if (!neuralNetwork) {
@@ -14,6 +14,9 @@ export function createPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork)
   const gridCells = 10;
   const totalSize = gridCells * (cellSize + spacing);
   const range = totalSize / 2;
+  
+  console.log(`🎯 Analytical polytope setup: cellSize=${cellSize}, spacing=${spacing}, gridCells=${gridCells}`);
+  console.log(`📐 Calculated range: ${range} (total visualization size: ${totalSize})`);
   
   // Compute polytopes analytically from ReLU network structure
   const polytopes = computeAnalyticalPolytopes(neuralNetwork, range);
@@ -75,6 +78,7 @@ function computeAnalyticalPolytopes(
 ): Array<{ pattern: string; vertices: Array<{ x: number; y: number }> }> {
 
   console.log("🔬 Proper multi-layer polytope computation...");
+  console.log(`📏 Using coordinate range: [-${range}, ${range}] (total width: ${2*range})`);
   
   // Step 1: Discover empirical patterns (same as before)
   const samplingResolution = 20;
@@ -159,6 +163,11 @@ function computeAnalyticalPolytopes(
  * 
  * This is the core mathematical challenge: expressing multi-layer ReLU constraints
  * as linear inequalities in input space (x, y).
+ * 
+ * CRITICAL: We need to properly handle coordinate transformations:
+ * - Network expects normalized inputs: [colNormalized, rowNormalized] ∈ [0,1]²
+ * - Constraints are solved in world space: (x, y) ∈ [-range, range]²
+ * - Transformation: colNormalized = (x + range)/(2*range), rowNormalized = (range - y)/(2*range)
  */
 function buildMultiLayerConstraints(
   network: SimpleNeuralNetwork,
@@ -195,16 +204,32 @@ function buildMultiLayerConstraints(
   
   for (let i = 0; i < hiddenSizes[0]; i++) {
     const isActive = layerActivations[0][i];
-    const w1 = layer1Weights[0][i];
-    const w2 = layer1Weights[1][i]; 
+    const w_col = layer1Weights[0][i];  // Weight for normalized column input
+    const w_row = layer1Weights[1][i];  // Weight for normalized row input
     const bias = layer1Biases[i];
     
+    // Network computes: ReLU(w_col * colNormalized + w_row * rowNormalized + bias)
+    // Where: colNormalized = (x + range)/(2*range), rowNormalized = (range - y)/(2*range)
+    // 
+    // Substituting:
+    // ReLU(w_col * (x + range)/(2*range) + w_row * (range - y)/(2*range) + bias)
+    // = ReLU((w_col * (x + range) + w_row * (range - y))/(2*range) + bias)
+    // = ReLU((w_col * x + w_col * range + w_row * range - w_row * y)/(2*range) + bias)
+    // = ReLU((w_col * x - w_row * y + range * (w_col + w_row))/(2*range) + bias)
+    // 
+    // For constraint: (w_col * x - w_row * y + range * (w_col + w_row))/(2*range) + bias ≥ 0 (if active)
+    // Multiply by 2*range: w_col * x - w_row * y + range * (w_col + w_row) + bias * 2 * range ≥ 0
+    
+    const a = w_col;
+    const b = -w_row;
+    const c = range * (w_col + w_row) + bias * 2 * range;
+    
     if (isActive) {
-      // h₁ᵢ = ReLU(w1*x + w2*y + bias) > 0  ⟹  w1*x + w2*y + bias ≥ 0
-      constraints.push({ a: w1, b: w2, c: bias, sign: 1 });
+      // Neuron is active: constraint ≥ 0
+      constraints.push({ a, b, c, sign: 1 });
     } else {
-      // h₁ᵢ = ReLU(w1*x + w2*y + bias) = 0  ⟹  w1*x + w2*y + bias ≤ 0
-      constraints.push({ a: w1, b: w2, c: bias, sign: -1 });
+      // Neuron is inactive: constraint ≤ 0
+      constraints.push({ a, b, c, sign: -1 });
     }
   }
   
@@ -218,7 +243,7 @@ function buildMultiLayerConstraints(
   // Add bounding box constraints to ensure bounded polytopes
   // We want: -boundingRange ≤ x ≤ boundingRange and -boundingRange ≤ y ≤ boundingRange
   // Convert to standard form: a*x + b*y + c ≥ 0
-  const boundingRange = range * 0.9;
+  const boundingRange = range;
   constraints.push(
     { a: 1, b: 0, c: boundingRange, sign: 1 },    // x ≥ -boundingRange  ⟹  x + boundingRange ≥ 0
     { a: -1, b: 0, c: boundingRange, sign: 1 },   // x ≤ boundingRange   ⟹  -x + boundingRange ≥ 0
