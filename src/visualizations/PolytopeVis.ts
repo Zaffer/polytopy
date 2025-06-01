@@ -18,7 +18,7 @@ export function createPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork)
   const range = totalSize / 2;
   
   // Higher resolution for smoother polytope boundaries
-  const resolution = 80;
+  const resolution = 100;
   const step = (2 * range) / resolution;
   
   // Create 2D grid of activation patterns

@@ -22,6 +22,7 @@ export class ControlManager {
     neuralNetworkCheckbox?: HTMLInputElement;
     predictionsCheckbox?: HTMLInputElement;
     polytopesCheckbox?: HTMLInputElement;
+    analyticalPolytopesCheckbox?: HTMLInputElement;
     patternRadioButtons?: HTMLInputElement[];
     drawingPad?: any; // DrawingPad instance
     drawingPadContainer?: HTMLElement; // Container for showing/hiding
@@ -115,6 +116,10 @@ export class ControlManager {
         if (this.elements.polytopesCheckbox) {
           this.elements.polytopesCheckbox.checked = options.showPolytopes;
         }
+        
+        if (this.elements.analyticalPolytopesCheckbox) {
+          this.elements.analyticalPolytopesCheckbox.checked = options.showAnalyticalPolytopes;
+        }
       })
     );
   }
@@ -177,12 +182,14 @@ export class ControlManager {
     trainingDataCheckbox: HTMLInputElement,
     neuralNetworkCheckbox: HTMLInputElement,
     predictionsCheckbox: HTMLInputElement,
-    polytopesCheckbox: HTMLInputElement
+    polytopesCheckbox: HTMLInputElement,
+    analyticalPolytopesCheckbox: HTMLInputElement
   ): void {
     this.elements.trainingDataCheckbox = trainingDataCheckbox;
     this.elements.neuralNetworkCheckbox = neuralNetworkCheckbox;
     this.elements.predictionsCheckbox = predictionsCheckbox;
     this.elements.polytopesCheckbox = polytopesCheckbox;
+    this.elements.analyticalPolytopesCheckbox = analyticalPolytopesCheckbox;
     
     // Initialize with current values
     const options = this.appState.visualizationOptions.getValue();
@@ -191,6 +198,7 @@ export class ControlManager {
     neuralNetworkCheckbox.checked = options.showNeuralNetwork;
     predictionsCheckbox.checked = options.showPredictions;
     polytopesCheckbox.checked = options.showPolytopes;
+    analyticalPolytopesCheckbox.checked = options.showAnalyticalPolytopes;
   }
   
   /**

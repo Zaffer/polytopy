@@ -60,6 +60,7 @@ export interface VisualizationOptions {
   showNeuralNetwork: boolean;
   showPredictions: boolean;
   showPolytopes: boolean;
+  showAnalyticalPolytopes: boolean;
 }
 
 /**
@@ -92,4 +93,5 @@ export const DEFAULT_VISUALIZATION_OPTIONS: VisualizationOptions = {
   showNeuralNetwork: true,
   showPredictions: true,
   showPolytopes: true,
+  showAnalyticalPolytopes: true,
 };

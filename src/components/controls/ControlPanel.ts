@@ -209,12 +209,17 @@ export function setupControls(appController: AppController): HTMLElement {
     uiManager.onPanelVisibilityChange("polytopes", checked);
   });
   
+  const analyticalPolytopesCheckbox = addCheckbox(visibilityFieldset, "Analytical Polytopes", true, (checked) => {
+    uiManager.onPanelVisibilityChange("analyticalPolytopes", checked);
+  });
+  
   // Register visibility checkboxes with the UI manager
   uiManager.registerVisibilityCheckboxes(
     trainingDataCheckbox,
     neuralNetworkCheckbox,
     predictionsCheckbox,
-    polytopesCheckbox
+    polytopesCheckbox,
+    analyticalPolytopesCheckbox
   );
   
   // Add cleanup handler for window unload

@@ -15,7 +15,8 @@ export class PanelLabels {
     [PanelType.TRAINING_DATA]: 'Input',
     [PanelType.NEURAL_NETWORK]: 'Network', 
     [PanelType.PREDICTIONS]: 'Predictions',
-    [PanelType.POLYTOPES]: 'Polytopes'
+    [PanelType.POLYTOPES]: 'Polytopes',
+    [PanelType.ANALYTICAL_POLYTOPES]: 'Analytical Polytopes'
   };
   
   constructor() {

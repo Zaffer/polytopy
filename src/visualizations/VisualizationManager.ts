@@ -7,6 +7,7 @@ import { createDataVisualization } from "./DataVis";
 import { createNeuralNetworkVisualization } from "./NetworkVis";
 import { createPredictionVisualization } from "./PredictionVis";
 import { createPolytopeVisualization } from "./PolytopeVis";
+import { createPolytopeVisualization as createAnalyticalPolytopeVisualization } from "./PolytopeVis2";
 import { TrainingManager } from "../models/TrainingManager";
 
 /**
@@ -191,6 +192,74 @@ export class VisualizationManager {
   }
   
   /**
+   * Create or update the analytical polytope visualization (PolytopeVis2)
+   */
+  public updateAnalyticalPolytopeVisualization(): void {
+    // Subscribe to visualization options changes
+    this.subscriptions.push(
+      this.appState.visualizationOptions.subscribe(options => {
+        if (this.trainingManager) {
+          const networkInstance = this.trainingManager.getNeuralNetwork();
+          const visualization = createAnalyticalPolytopeVisualization(networkInstance);
+          this.sceneManager.updatePanelWithVisibility(
+            PanelType.ANALYTICAL_POLYTOPES, 
+            visualization, 
+            options.showAnalyticalPolytopes
+          );
+        }
+      })
+    );
+
+    // Subscribe to network config changes (topology changes)
+    this.subscriptions.push(
+      this.appState.networkConfig.subscribe(() => {
+        const options = this.appState.visualizationOptions.getValue();
+        if (this.trainingManager) {
+          const networkInstance = this.trainingManager.getNeuralNetwork();
+          const visualization = createAnalyticalPolytopeVisualization(networkInstance);
+          this.sceneManager.updatePanelWithVisibility(
+            PanelType.ANALYTICAL_POLYTOPES, 
+            visualization, 
+            options.showAnalyticalPolytopes
+          );
+        }
+      })
+    );
+
+    // Subscribe to network recreation events
+    if (this.trainingManager) {
+      this.subscriptions.push(
+        this.trainingManager.getNetworkRecreated$().subscribe(() => {
+          const options = this.appState.visualizationOptions.getValue();
+          const networkInstance = this.trainingManager!.getNeuralNetwork();
+          const visualization = createAnalyticalPolytopeVisualization(networkInstance);
+          this.sceneManager.updatePanelWithVisibility(
+            PanelType.ANALYTICAL_POLYTOPES, 
+            visualization, 
+            options.showAnalyticalPolytopes
+          );
+        })
+      );
+    }
+
+    // Also update when weights change during training
+    if (this.trainingManager) {
+      this.subscriptions.push(
+        this.trainingManager.getWeightsUpdate$().subscribe(() => {
+          const options = this.appState.visualizationOptions.getValue();
+          const networkInstance = this.trainingManager!.getNeuralNetwork();
+          const visualization = createAnalyticalPolytopeVisualization(networkInstance);
+          this.sceneManager.updatePanelWithVisibility(
+            PanelType.ANALYTICAL_POLYTOPES, 
+            visualization, 
+            options.showAnalyticalPolytopes
+          );
+        })
+      );
+    }
+  }
+  
+  /**
    * Subscribe to visualization options changes to handle show/hide
    */
   public subscribeToVisibilityChanges(): void {
@@ -201,6 +270,7 @@ export class VisualizationManager {
         this.sceneManager.setPanelVisibility(PanelType.NEURAL_NETWORK, options.showNeuralNetwork);
         this.sceneManager.setPanelVisibility(PanelType.PREDICTIONS, options.showPredictions);
         this.sceneManager.setPanelVisibility(PanelType.POLYTOPES, options.showPolytopes);
+        this.sceneManager.setPanelVisibility(PanelType.ANALYTICAL_POLYTOPES, options.showAnalyticalPolytopes);
       })
     );
   }

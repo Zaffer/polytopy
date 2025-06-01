@@ -39,6 +39,7 @@ export class Application {
     this.visualizationManager.updateNetworkVisualization(trainingManager);
     this.visualizationManager.updatePredictionVisualization(trainingManager.getPredictions$());
     this.visualizationManager.updatePolytopeVisualization();
+    this.visualizationManager.updateAnalyticalPolytopeVisualization();
     
     // Subscribe to visibility changes for show/hide functionality
     this.visualizationManager.subscribeToVisibilityChanges();
