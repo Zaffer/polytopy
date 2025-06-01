@@ -5,6 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { VisualizationManager } from "../visualizations/VisualizationManager";
 import { PanelType, SceneConfig, DEFAULT_SCENE_CONFIG } from "../types/scene";
 import { PanelLabels } from "../components/PanelLabels";
+import { SelectionIndicator } from "../components/SelectionIndicator";
 
 /**
  * SceneManager class responsible for the core 3D scene setup and management
@@ -20,10 +21,14 @@ export class SceneManager {
   // Application components
   private visualizationManager: VisualizationManager;
   private panelLabels: PanelLabels;
+  private selectionIndicator: SelectionIndicator;
   
   // Configuration
   private config: SceneConfig;
   
+  // Right-click state tracking
+  private isRightMouseDown: boolean = false;
+
   constructor(config: Partial<SceneConfig> = {}) {
     // Merge provided config with defaults
     this.config = { ...DEFAULT_SCENE_CONFIG, ...config };
@@ -75,6 +80,15 @@ export class SceneManager {
     // Initialize panel labels
     this.panelLabels = new PanelLabels();
     this.scene.add(this.panelLabels.getLabelGroup());
+    
+    // Initialize selection indicator
+    this.selectionIndicator = new SelectionIndicator(this.scene, this.camera);
+    
+    // Add mouse event listeners for selection indicator
+    this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
+    this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
+    this.renderer.domElement.addEventListener('mouseup', this.onMouseUp.bind(this));
+    this.renderer.domElement.addEventListener('contextmenu', this.onContextMenu.bind(this));
   }
   
   /**
@@ -99,6 +113,42 @@ export class SceneManager {
   }
   
   /**
+   * Handle mouse down events
+   */
+  private onMouseDown(event: MouseEvent): void {
+    if (event.button === 2) { // Right mouse button
+      this.isRightMouseDown = true;
+      this.selectionIndicator.showHoldIndicator(event.clientX, event.clientY);
+    }
+  }
+
+  /**
+   * Handle mouse move events
+   */
+  private onMouseMove(event: MouseEvent): void {
+    if (this.isRightMouseDown) {
+      this.selectionIndicator.updateHoldIndicator(event.clientX, event.clientY);
+    }
+  }
+
+  /**
+   * Handle mouse up events
+   */
+  private onMouseUp(event: MouseEvent): void {
+    if (event.button === 2 && this.isRightMouseDown) { // Right mouse button
+      this.isRightMouseDown = false;
+      this.selectionIndicator.createIndicator(event.clientX, event.clientY);
+    }
+  }
+
+  /**
+   * Handle context menu events to prevent default behavior
+   */
+  private onContextMenu(event: MouseEvent): void {
+    event.preventDefault(); // Prevent context menu
+  }
+  
+  /**
    * Start the animation loop
    */
   public startAnimationLoop(): void {
@@ -115,8 +165,10 @@ export class SceneManager {
   public dispose(): void {
     this.visualizationManager.dispose();
     this.panelLabels.dispose();
+    this.selectionIndicator.dispose();
     this.renderer.setAnimationLoop(null);
     window.removeEventListener("resize", this.onWindowResize.bind(this));
+    this.renderer.domElement.removeEventListener('contextmenu', this.onRightClick.bind(this));
   }
   
   // Panel management methods

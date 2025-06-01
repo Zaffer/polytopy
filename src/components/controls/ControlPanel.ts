@@ -213,7 +213,7 @@ export function setupControls(appController: AppController): HTMLElement {
     uiManager.onPanelVisibilityChange("analyticalPolytopes", checked);
   });
   
-  const linesCheckbox = addCheckbox(visibilityFieldset, "ReLU Lines", true, (checked) => {
+  const linesCheckbox = addCheckbox(visibilityFieldset, "Lines", true, (checked) => {
     uiManager.onPanelVisibilityChange("lines", checked);
   });
   

@@ -17,7 +17,7 @@ export class PanelLabels {
     [PanelType.PREDICTIONS]: 'Predictions',
     [PanelType.POLYTOPES]: 'Polytopes Sampled',
     [PanelType.ANALYTICAL_POLYTOPES]: 'Polytopes Analytic',
-    [PanelType.LINES]: 'ReLU Lines'
+    [PanelType.LINES]: 'Lines'
   };
   
   constructor() {
