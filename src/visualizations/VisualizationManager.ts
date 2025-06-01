@@ -6,8 +6,8 @@ import { AppState } from "../core/AppState";
 import { createDataVisualization } from "./DataVis";
 import { createNeuralNetworkVisualization } from "./NetworkVis";
 import { createPredictionVisualization } from "./PredictionVis";
-import { createPolytopeVisualization } from "./PolytopeVis";
-import { createAnalyticalPolytopeVisualization } from "./PolytopeVis2";
+import { createSampledPolytopeVisualization } from "./PolytopeSampledVis";
+import { createAnalyticPolytopeVisualization } from "./PolytopeAnalyticVis";
 import { TrainingManager } from "../models/TrainingManager";
 
 /**
@@ -132,7 +132,7 @@ export class VisualizationManager {
       this.appState.visualizationOptions.subscribe(options => {
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
-          const visualization = createPolytopeVisualization(networkInstance);
+          const visualization = createSampledPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
             PanelType.POLYTOPES, 
             visualization, 
@@ -148,7 +148,7 @@ export class VisualizationManager {
         const options = this.appState.visualizationOptions.getValue();
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
-          const visualization = createPolytopeVisualization(networkInstance);
+          const visualization = createSampledPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
             PanelType.POLYTOPES, 
             visualization, 
@@ -164,7 +164,7 @@ export class VisualizationManager {
         this.trainingManager.getNetworkRecreated$().subscribe(() => {
           const options = this.appState.visualizationOptions.getValue();
           const networkInstance = this.trainingManager!.getNeuralNetwork();
-          const visualization = createPolytopeVisualization(networkInstance);
+          const visualization = createSampledPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
             PanelType.POLYTOPES, 
             visualization, 
@@ -180,7 +180,7 @@ export class VisualizationManager {
         this.trainingManager.getWeightsUpdate$().subscribe(() => {
           const options = this.appState.visualizationOptions.getValue();
           const networkInstance = this.trainingManager!.getNeuralNetwork();
-          const visualization = createPolytopeVisualization(networkInstance);
+          const visualization = createSampledPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
             PanelType.POLYTOPES, 
             visualization, 
@@ -200,7 +200,7 @@ export class VisualizationManager {
       this.appState.visualizationOptions.subscribe(options => {
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
-          const visualization = createAnalyticalPolytopeVisualization(networkInstance);
+          const visualization = createAnalyticPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
             PanelType.ANALYTICAL_POLYTOPES, 
             visualization, 
@@ -216,7 +216,7 @@ export class VisualizationManager {
         const options = this.appState.visualizationOptions.getValue();
         if (this.trainingManager) {
           const networkInstance = this.trainingManager.getNeuralNetwork();
-          const visualization = createAnalyticalPolytopeVisualization(networkInstance);
+          const visualization = createAnalyticPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
             PanelType.ANALYTICAL_POLYTOPES, 
             visualization, 
@@ -232,7 +232,7 @@ export class VisualizationManager {
         this.trainingManager.getNetworkRecreated$().subscribe(() => {
           const options = this.appState.visualizationOptions.getValue();
           const networkInstance = this.trainingManager!.getNeuralNetwork();
-          const visualization = createAnalyticalPolytopeVisualization(networkInstance);
+          const visualization = createAnalyticPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
             PanelType.ANALYTICAL_POLYTOPES, 
             visualization, 
@@ -248,7 +248,7 @@ export class VisualizationManager {
         this.trainingManager.getWeightsUpdate$().subscribe(() => {
           const options = this.appState.visualizationOptions.getValue();
           const networkInstance = this.trainingManager!.getNeuralNetwork();
-          const visualization = createAnalyticalPolytopeVisualization(networkInstance);
+          const visualization = createAnalyticPolytopeVisualization(networkInstance);
           this.sceneManager.updatePanelWithVisibility(
             PanelType.ANALYTICAL_POLYTOPES, 
             visualization, 

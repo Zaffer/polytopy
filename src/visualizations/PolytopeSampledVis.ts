@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { SimpleNeuralNetwork } from "../models/NeuralNetworkTrainer";
 
-export function createPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork): THREE.Group {
+export function createSampledPolytopeVisualization(neuralNetwork?: SimpleNeuralNetwork): THREE.Group {
   const group = new THREE.Group();
   
   if (!neuralNetwork) {

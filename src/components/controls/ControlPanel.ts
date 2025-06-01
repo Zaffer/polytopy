@@ -205,11 +205,11 @@ export function setupControls(appController: AppController): HTMLElement {
     uiManager.onPanelVisibilityChange("predictions", checked);
   });
   
-  const polytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes", true, (checked) => {
+  const polytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes Sampled", true, (checked) => {
     uiManager.onPanelVisibilityChange("polytopes", checked);
   });
   
-  const analyticalPolytopesCheckbox = addCheckbox(visibilityFieldset, "Analytical Polytopes", true, (checked) => {
+  const analyticalPolytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes Analytic", true, (checked) => {
     uiManager.onPanelVisibilityChange("analyticalPolytopes", checked);
   });
   
