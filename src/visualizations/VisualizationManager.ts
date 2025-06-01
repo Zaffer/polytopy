@@ -8,6 +8,7 @@ import { createNeuralNetworkVisualization } from "./NetworkVis";
 import { createPredictionVisualization } from "./PredictionVis";
 import { createSampledPolytopeVisualization } from "./PolytopeSampledVis";
 import { createAnalyticPolytopeVisualization } from "./PolytopeAnalyticVis";
+import { createLinesVisualization } from "./LinesVis";
 import { TrainingManager } from "../models/TrainingManager";
 
 /**
@@ -260,6 +261,74 @@ export class VisualizationManager {
   }
   
   /**
+   * Create or update the lines visualization
+   */
+  public updateLinesVisualization(): void {
+    // Subscribe to visualization options changes
+    this.subscriptions.push(
+      this.appState.visualizationOptions.subscribe(options => {
+        if (this.trainingManager) {
+          const networkInstance = this.trainingManager.getNeuralNetwork();
+          const visualization = createLinesVisualization(networkInstance);
+          this.sceneManager.updatePanelWithVisibility(
+            PanelType.LINES, 
+            visualization, 
+            options.showLines
+          );
+        }
+      })
+    );
+
+    // Subscribe to network config changes (topology changes)
+    this.subscriptions.push(
+      this.appState.networkConfig.subscribe(() => {
+        const options = this.appState.visualizationOptions.getValue();
+        if (this.trainingManager) {
+          const networkInstance = this.trainingManager.getNeuralNetwork();
+          const visualization = createLinesVisualization(networkInstance);
+          this.sceneManager.updatePanelWithVisibility(
+            PanelType.LINES, 
+            visualization, 
+            options.showLines
+          );
+        }
+      })
+    );
+
+    // Subscribe to network recreation events
+    if (this.trainingManager) {
+      this.subscriptions.push(
+        this.trainingManager.getNetworkRecreated$().subscribe(() => {
+          const options = this.appState.visualizationOptions.getValue();
+          const networkInstance = this.trainingManager!.getNeuralNetwork();
+          const visualization = createLinesVisualization(networkInstance);
+          this.sceneManager.updatePanelWithVisibility(
+            PanelType.LINES, 
+            visualization, 
+            options.showLines
+          );
+        })
+      );
+    }
+
+    // Also update when weights change during training
+    if (this.trainingManager) {
+      this.subscriptions.push(
+        this.trainingManager.getWeightsUpdate$().subscribe(() => {
+          const options = this.appState.visualizationOptions.getValue();
+          const networkInstance = this.trainingManager!.getNeuralNetwork();
+          const visualization = createLinesVisualization(networkInstance);
+          this.sceneManager.updatePanelWithVisibility(
+            PanelType.LINES, 
+            visualization, 
+            options.showLines
+          );
+        })
+      );
+    }
+  }
+
+  /**
    * Subscribe to visualization options changes to handle show/hide
    */
   public subscribeToVisibilityChanges(): void {
@@ -271,6 +340,7 @@ export class VisualizationManager {
         this.sceneManager.setPanelVisibility(PanelType.PREDICTIONS, options.showPredictions);
         this.sceneManager.setPanelVisibility(PanelType.POLYTOPES, options.showPolytopes);
         this.sceneManager.setPanelVisibility(PanelType.ANALYTICAL_POLYTOPES, options.showAnalyticalPolytopes);
+        this.sceneManager.setPanelVisibility(PanelType.LINES, options.showLines);
       })
     );
   }

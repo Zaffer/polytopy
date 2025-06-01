@@ -213,13 +213,18 @@ export function setupControls(appController: AppController): HTMLElement {
     uiManager.onPanelVisibilityChange("analyticalPolytopes", checked);
   });
   
+  const linesCheckbox = addCheckbox(visibilityFieldset, "ReLU Lines", true, (checked) => {
+    uiManager.onPanelVisibilityChange("lines", checked);
+  });
+  
   // Register visibility checkboxes with the UI manager
   uiManager.registerVisibilityCheckboxes(
     trainingDataCheckbox,
     neuralNetworkCheckbox,
     predictionsCheckbox,
     polytopesCheckbox,
-    analyticalPolytopesCheckbox
+    analyticalPolytopesCheckbox,
+    linesCheckbox
   );
   
   // Add cleanup handler for window unload

@@ -92,6 +92,9 @@ export class AppController {
       case PanelType.ANALYTICAL_POLYTOPES:
         this.appState.updateVisualizationOptions({ showAnalyticalPolytopes: visible });
         break;
+      case PanelType.LINES:
+        this.appState.updateVisualizationOptions({ showLines: visible });
+        break;
     }
   }
   

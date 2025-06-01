@@ -61,6 +61,7 @@ export interface VisualizationOptions {
   showPredictions: boolean;
   showPolytopes: boolean;
   showAnalyticalPolytopes: boolean;
+  showLines: boolean;
 }
 
 /**
@@ -94,4 +95,5 @@ export const DEFAULT_VISUALIZATION_OPTIONS: VisualizationOptions = {
   showPredictions: true,
   showPolytopes: true,
   showAnalyticalPolytopes: true,
+  showLines: true,
 };

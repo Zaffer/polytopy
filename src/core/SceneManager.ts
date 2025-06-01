@@ -165,7 +165,8 @@ export class SceneManager {
       PanelType.NEURAL_NETWORK,
       PanelType.PREDICTIONS,
       PanelType.POLYTOPES,
-      PanelType.ANALYTICAL_POLYTOPES
+      PanelType.ANALYTICAL_POLYTOPES,
+      PanelType.LINES
     ];
 
     const changedPanelIndex = panelOrder.indexOf(changedPanelName);

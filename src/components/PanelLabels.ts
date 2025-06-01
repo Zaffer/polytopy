@@ -16,7 +16,8 @@ export class PanelLabels {
     [PanelType.NEURAL_NETWORK]: 'Network', 
     [PanelType.PREDICTIONS]: 'Predictions',
     [PanelType.POLYTOPES]: 'Polytopes Sampled',
-    [PanelType.ANALYTICAL_POLYTOPES]: 'Polytopes Analytic'
+    [PanelType.ANALYTICAL_POLYTOPES]: 'Polytopes Analytic',
+    [PanelType.LINES]: 'ReLU Lines'
   };
   
   constructor() {

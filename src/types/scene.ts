@@ -8,7 +8,8 @@ export enum PanelType {
   NEURAL_NETWORK = "neuralNetwork",
   PREDICTIONS = "predictions",
   POLYTOPES = "polytopes",
-  ANALYTICAL_POLYTOPES = "analyticalPolytopes"
+  ANALYTICAL_POLYTOPES = "analyticalPolytopes",
+  LINES = "lines"
 }
 
 /**
