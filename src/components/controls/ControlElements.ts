@@ -98,59 +98,34 @@ export function addCheckbox(
   return checkbox;
 }
 
-// Add a group of radio buttons
-export function addRadioGroup(
+// Add a dropdown selection to the panel
+export function addDropdown(
   panel: HTMLElement,
-  options: Array<{ id: string, label: string, checked?: boolean }>,
+  options: Array<{ id: string, label: string, selected?: boolean }>,
   onChange: (selectedId: string) => void
-): { radioGroup: HTMLElement, radioButtons: HTMLInputElement[] } {
+): HTMLSelectElement {
   const container = document.createElement('div');
   
-  const radioGroup = document.createElement('div');
-  
-  const radioButtons: HTMLInputElement[] = [];
-  
-  // Create a unique group name for this set of radio buttons
-  const groupName = `radio-group-${Math.random().toString(36).substring(2, 9)}`;
+  const select = document.createElement('select');
+  select.id = `dropdown-${Math.random().toString(36).substring(2, 9)}`;
   
   options.forEach(option => {
-    const radioContainer = document.createElement('div');
+    const optionElement = document.createElement('option');
+    optionElement.value = option.id;
+    optionElement.textContent = option.label;
+    optionElement.selected = option.selected || false;
     
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.id = option.id;
-    radio.name = groupName;
-    radio.value = option.id;  // Set value to the option id
-    radio.checked = option.checked || false;
-    
-    const radioLabel = document.createElement('label');
-    radioLabel.htmlFor = option.id;
-    radioLabel.textContent = option.label;
-    
-    radio.addEventListener('change', () => {
-      if (radio.checked) {
-        onChange(option.id);
-      }
-    });
-    
-    // Special handling for clicks on already selected radio buttons
-    radio.addEventListener('click', () => {
-      if (radio.checked) {
-        onChange(option.id);
-      }
-    });
-    
-    radioContainer.appendChild(radio);
-    radioContainer.appendChild(radioLabel);
-    radioGroup.appendChild(radioContainer);
-    
-    radioButtons.push(radio);
+    select.appendChild(optionElement);
   });
   
-  container.appendChild(radioGroup);
+  select.addEventListener('change', () => {
+    onChange(select.value);
+  });
+  
+  container.appendChild(select);
   panel.appendChild(container);
   
-  return { radioGroup, radioButtons };
+  return select;
 }
 
 // Add a separator line

@@ -180,14 +180,29 @@ export class SceneManager {
    * Add a panel to the scene
    */
   public addPanel(name: PanelType, group: THREE.Group): void {
-    // Calculate position based on existing panels
+    // Define the proper panel order
+    const panelOrder = [
+      PanelType.TRAINING_DATA,
+      PanelType.NEURAL_NETWORK,
+      PanelType.PREDICTIONS,
+      PanelType.ANALYTICAL_POLYTOPES,
+      PanelType.POLYTOPES,
+      PanelType.LINES
+    ];
+
+    // Calculate position based on the proper panel order
     let currentDepth = 0;
-    if (this.panels.size > 0) {
-      const lastPanel = Array.from(this.panels.values()).at(-1);
-      if (lastPanel) {
-        const boundingBox = new THREE.Box3().setFromObject(lastPanel);
+    const currentPanelIndex = panelOrder.indexOf(name);
+    
+    // Calculate position based on panels that should come before this one
+    for (let i = 0; i < currentPanelIndex; i++) {
+      const prevPanelType = panelOrder[i];
+      const prevPanel = this.panels.get(prevPanelType);
+      
+      if (prevPanel) {
+        const boundingBox = new THREE.Box3().setFromObject(prevPanel);
         const depth = boundingBox.max.z - boundingBox.min.z;
-        currentDepth = lastPanel.position.z - depth - this.config.panelSpacing;
+        currentDepth = prevPanel.position.z - depth - this.config.panelSpacing;
       }
     }
     
@@ -229,8 +244,8 @@ export class SceneManager {
       PanelType.TRAINING_DATA,
       PanelType.NEURAL_NETWORK,
       PanelType.PREDICTIONS,
-      PanelType.POLYTOPES,
       PanelType.ANALYTICAL_POLYTOPES,
+      PanelType.POLYTOPES,
       PanelType.LINES
     ];
 

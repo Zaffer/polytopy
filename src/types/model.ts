@@ -4,7 +4,7 @@
 export enum PatternType {
   RANDOM = 'random',
   CHECKERBOARD = 'checkerboard',
-  STRIPES_HORIZONTAL = 'stripes_horizontal',
+  STRIPES_FIFTY_FIFTY = 'stripes_fifty_fifty',
   STRIPES_VERTICAL = 'stripes_vertical',
   CIRCLE = 'circle',
   CORNERS = 'corners',

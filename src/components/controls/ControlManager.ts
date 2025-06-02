@@ -24,7 +24,7 @@ export class ControlManager {
     polytopesCheckbox?: HTMLInputElement;
     analyticalPolytopesCheckbox?: HTMLInputElement;
     linesCheckbox?: HTMLInputElement;
-    patternRadioButtons?: HTMLInputElement[];
+    patternDropdown?: HTMLSelectElement;
     drawingPad?: any; // DrawingPad instance
     drawingPadContainer?: HTMLElement; // Container for showing/hiding
   } = {};
@@ -80,11 +80,9 @@ export class ControlManager {
           this.elements.updateIntervalSlider.value = config.updateInterval.toString();
         }
         
-        // Update pattern radio buttons
-        if (this.elements.patternRadioButtons) {
-          this.elements.patternRadioButtons.forEach(radio => {
-            radio.checked = radio.value === config.patternType;
-          });
+        // Update pattern dropdown to reflect current pattern
+        if (this.elements.patternDropdown) {
+          this.elements.patternDropdown.value = config.patternType;
         }
         
         // Show/hide drawing pad based on pattern type
@@ -210,16 +208,14 @@ export class ControlManager {
   }
   
   /**
-   * Register pattern radio buttons
+   * Register pattern dropdown
    */
-  public registerPatternRadioGroup(radioButtons: HTMLInputElement[]): void {
-    this.elements.patternRadioButtons = radioButtons;
+  public registerPatternDropdown(dropdown: HTMLSelectElement): void {
+    this.elements.patternDropdown = dropdown;
     
     // Initialize with current pattern type
     const currentPattern = this.appState.trainingConfig.getValue().patternType;
-    radioButtons.forEach(radio => {
-      radio.checked = radio.value === currentPattern;
-    });
+    dropdown.value = currentPattern;
   }
 
   /**

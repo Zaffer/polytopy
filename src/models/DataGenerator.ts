@@ -70,8 +70,8 @@ export class DataManager {
         return this.generateRandomPattern(width, height);
       case PatternType.CHECKERBOARD:
         return this.generateCheckerboardPattern(width, height);
-      case PatternType.STRIPES_HORIZONTAL:
-        return this.generateHorizontalStripesPattern(width, height);
+      case PatternType.STRIPES_FIFTY_FIFTY:
+        return this.generateFiftyFiftyPattern(width, height);
       case PatternType.STRIPES_VERTICAL:
         return this.generateVerticalStripesPattern(width, height);
       case PatternType.CIRCLE:
@@ -120,16 +120,17 @@ export class DataManager {
   }
 
   /**
-   * Generate horizontal stripes pattern
+   * Generate 50/50 black white pattern split down the middle
    */
-  private generateHorizontalStripesPattern(width: number, height: number): number[][] {
+  private generateFiftyFiftyPattern(width: number, height: number): number[][] {
     const data: number[][] = [];
+    const midpoint = Math.floor(width / 2);
     
     for (let i = 0; i < height; i++) {
       const row: number[] = [];
-      const value = Math.floor(i / 2) % 2;
       for (let j = 0; j < width; j++) {
-        row.push(value);
+        // Left half is black (0), right half is white (1)
+        row.push(j < midpoint ? 0 : 1);
       }
       data.push(row);
     }

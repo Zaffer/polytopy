@@ -4,7 +4,7 @@ import {
   createControlsPanel,
   addSlider,
   addCheckbox,
-  addRadioGroup,
+  addDropdown,
   addDrawingPad
 } from "./ControlElements";
 import { PatternType } from "../../types/model";
@@ -183,18 +183,18 @@ export function setupControls(appController: AppController): HTMLElement {
   dataFieldset.appendChild(dataLegend);
   collapsibleContent.appendChild(dataFieldset);
 
-  // Pattern selection radio buttons
+  // Pattern selection dropdown
   const patternOptions = [
-    { id: PatternType.CIRCLE, label: 'Circle', checked: true },
+    { id: PatternType.CIRCLE, label: 'Circle', selected: true },
     { id: PatternType.CORNERS, label: 'Corners' },
     { id: PatternType.STRIPES_VERTICAL, label: 'Vertical Stripes' },
-    { id: PatternType.STRIPES_HORIZONTAL, label: 'Horizontal Stripes' },
+    { id: PatternType.STRIPES_FIFTY_FIFTY, label: 'Half Half' },
     { id: PatternType.CHECKERBOARD, label: 'Checkerboard' },
     { id: PatternType.RANDOM, label: 'Random' },
     { id: PatternType.DRAWING_PAD, label: 'Drawing Pad' }
   ];
 
-  const patternRadioGroup = addRadioGroup(dataFieldset, patternOptions, (selectedId) => {
+  const patternDropdown = addDropdown(dataFieldset, patternOptions, (selectedId) => {
     // Handle Random pattern specially - always regenerate when clicked
     if (selectedId === PatternType.RANDOM) {
       uiManager.onRandomPatternClick();
@@ -210,8 +210,8 @@ export function setupControls(appController: AppController): HTMLElement {
     }
   });
 
-  // Register pattern radio group with UI manager
-  uiManager.registerPatternRadioGroup(patternRadioGroup.radioButtons);
+  // Register pattern dropdown with UI manager
+  uiManager.registerPatternDropdown(patternDropdown);
 
   // Add drawing pad (initially hidden)
   const drawingPadResult = addDrawingPad(dataFieldset, 10, 10, (data) => {
@@ -224,34 +224,41 @@ export function setupControls(appController: AppController): HTMLElement {
   // Register drawing pad with UI manager
   uiManager.registerDrawingPad(drawingPadResult.drawingPad, drawingPadContainer);
 
-  // Panel visibility checkboxes
-  const visibilityFieldset = document.createElement('fieldset');
-  const visibilityLegend = document.createElement('legend');
-  visibilityLegend.textContent = 'Visualisation Panels';
-  visibilityFieldset.appendChild(visibilityLegend);
-  collapsibleContent.appendChild(visibilityFieldset);
+  // Network Visuals panel
+  const networkVisualsFieldset = document.createElement('fieldset');
+  const networkVisualsLegend = document.createElement('legend');
+  networkVisualsLegend.textContent = 'Network Visuals';
+  networkVisualsFieldset.appendChild(networkVisualsLegend);
+  collapsibleContent.appendChild(networkVisualsFieldset);
   
-  const trainingDataCheckbox = addCheckbox(visibilityFieldset, "Training Data", true, (checked) => {
+  const trainingDataCheckbox = addCheckbox(networkVisualsFieldset, "Training Data", true, (checked) => {
     uiManager.onPanelVisibilityChange("trainingData", checked);
   });
   
-  const neuralNetworkCheckbox = addCheckbox(visibilityFieldset, "Neural Network", true, (checked) => {
+  const neuralNetworkCheckbox = addCheckbox(networkVisualsFieldset, "Neural Network", true, (checked) => {
     uiManager.onPanelVisibilityChange("neuralNetwork", checked);
   });
   
-  const predictionsCheckbox = addCheckbox(visibilityFieldset, "Predictions", true, (checked) => {
+  const predictionsCheckbox = addCheckbox(networkVisualsFieldset, "Predictions", true, (checked) => {
     uiManager.onPanelVisibilityChange("predictions", checked);
   });
+
+  // Polytope Visuals panel
+  const polytopeVisualsFieldset = document.createElement('fieldset');
+  const polytopeVisualsLegend = document.createElement('legend');
+  polytopeVisualsLegend.textContent = 'Polytope Visuals';
+  polytopeVisualsFieldset.appendChild(polytopeVisualsLegend);
+  collapsibleContent.appendChild(polytopeVisualsFieldset);
   
-  const polytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes Sampled", true, (checked) => {
-    uiManager.onPanelVisibilityChange("polytopes", checked);
-  });
-  
-  const analyticalPolytopesCheckbox = addCheckbox(visibilityFieldset, "Polytopes Analytic", true, (checked) => {
+  const analyticalPolytopesCheckbox = addCheckbox(polytopeVisualsFieldset, "Analytic (First Layer)", true, (checked) => {
     uiManager.onPanelVisibilityChange("analyticalPolytopes", checked);
   });
   
-  const linesCheckbox = addCheckbox(visibilityFieldset, "Lines", true, (checked) => {
+  const polytopesCheckbox = addCheckbox(polytopeVisualsFieldset, "Sampled", true, (checked) => {
+    uiManager.onPanelVisibilityChange("polytopes", checked);
+  });
+  
+  const linesCheckbox = addCheckbox(polytopeVisualsFieldset, "Lines", true, (checked) => {
     uiManager.onPanelVisibilityChange("lines", checked);
   });
   

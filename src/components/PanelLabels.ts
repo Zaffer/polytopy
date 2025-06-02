@@ -15,8 +15,8 @@ export class PanelLabels {
     [PanelType.TRAINING_DATA]: 'Input',
     [PanelType.NEURAL_NETWORK]: 'Network', 
     [PanelType.PREDICTIONS]: 'Predictions',
-    [PanelType.POLYTOPES]: 'Polytopes Sampled',
-    [PanelType.ANALYTICAL_POLYTOPES]: 'Polytopes Analytic',
+    [PanelType.ANALYTICAL_POLYTOPES]: 'Analytic',
+    [PanelType.POLYTOPES]: 'Sampled',
     [PanelType.LINES]: 'Lines'
   };
   
