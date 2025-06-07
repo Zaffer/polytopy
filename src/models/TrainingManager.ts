@@ -101,9 +101,8 @@ export class TrainingManager {
     // Update predictions to reflect the manual changes
     this.updatePredictions();
     
-    // For manual changes, we'll use a different approach to avoid recreating the entire visualization
-    // The NetworkInspector will handle visual updates more efficiently
-    // this.weightsUpdateSubject.next(); // Commented out to prevent full recreation
+    // Trigger weight update to regenerate NetworkVis (same as training does)
+    this.weightsUpdateSubject.next();
   }
   
   /**

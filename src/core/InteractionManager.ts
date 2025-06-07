@@ -272,4 +272,42 @@ export class InteractionManager {
     this.originalOpacity.clear();
     this.rightClickSubject.complete();
   }
+
+  /**
+   * Update the selected object after NetworkVis regeneration
+   * This finds the new object that matches the same metadata and updates the selection
+   */
+  public updateSelectedObjectAfterRegeneration(layerIndex: number, nodeIndex?: number, sourceNodeIndex?: number, targetNodeIndex?: number): THREE.Object3D | null {
+    if (!this.selectedObject) return null;
+    
+    // Find the new object with matching metadata
+    let newSelectedObject: THREE.Object3D | null = null;
+    
+    this.scene.traverse((child: THREE.Object3D) => {
+      const userData = child.userData;
+      
+      // Check if this is the same logical object as before
+      if (userData.layerIndex === layerIndex) {
+        if (nodeIndex !== undefined && userData.nodeIndex === nodeIndex && userData.type === InteractableType.NETWORK_NODE) {
+          newSelectedObject = child;
+        } else if (sourceNodeIndex !== undefined && targetNodeIndex !== undefined && 
+                   userData.sourceNodeIndex === sourceNodeIndex && 
+                   userData.targetNodeIndex === targetNodeIndex && 
+                   userData.type === InteractableType.NETWORK_EDGE) {
+          newSelectedObject = child;
+        }
+      }
+    });
+    
+    if (newSelectedObject) {
+      // Clear the old selection without restoring opacity (since the old object is gone)
+      this.selectedObject = null;
+      
+      // Set the new object as selected
+      this.selectedObject = newSelectedObject;
+      this.applySelectionHighlight(this.selectedObject);
+    }
+    
+    return newSelectedObject;
+  }
 }

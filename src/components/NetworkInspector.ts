@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { InteractionData, InteractableType, InteractionManager } from "../core/InteractionManager";
 import { TrainingManager } from "../models/TrainingManager";
 
@@ -264,7 +263,7 @@ export class NetworkInspector {
       label.textContent = `Bias: ${newValue.toFixed(4)}`;
       valueDisplay.textContent = newValue.toFixed(4);
       
-      // Update the network immediately
+      // Update bias and trigger full regeneration
       this.updateNodeBias(layerIndex!, nodeIndex!, newValue);
     });
 
@@ -310,7 +309,7 @@ export class NetworkInspector {
       label.textContent = `Weight: ${newValue.toFixed(4)}`;
       valueDisplay.textContent = newValue.toFixed(4);
       
-      // Update the network immediately
+      // Update weight and trigger full regeneration
       this.updateConnectionWeight(layerIndex!, sourceNodeIndex!, targetNodeIndex!, newValue);
     });
 
@@ -441,11 +440,11 @@ export class NetworkInspector {
     const network = this.trainingManager.getNeuralNetwork();
     network.updateBias(layerIndex, nodeIndex, newBias);
     
-    // Update visual representation without recreating the entire scene
-    this.updateNodeVisual(layerIndex, nodeIndex, newBias);
+    // Trigger NetworkVis regeneration (same approach as training)
+    this.trainingManager.notifyManualWeightChange();
     
-    // Only update predictions, don't trigger full visualization recreation
-    this.trainingManager.updatePredictions();
+    // Restore selection after regeneration
+    this.restoreSelectionAfterRegeneration();
   }
 
   /**
@@ -458,151 +457,33 @@ export class NetworkInspector {
     const network = this.trainingManager.getNeuralNetwork();
     network.updateWeight(layerIndex, fromNode, toNode, newWeight);
     
-    // Update visual representation without recreating the entire scene
-    this.updateEdgeVisual(layerIndex, fromNode, toNode, newWeight);
+    // Trigger NetworkVis regeneration (same approach as training)
+    this.trainingManager.notifyManualWeightChange();
     
-    // Only update predictions, don't trigger full visualization recreation
-    this.trainingManager.updatePredictions();
+    // Restore selection after regeneration
+    this.restoreSelectionAfterRegeneration();
   }
 
   /**
-   * Update the visual representation of a node (color, size) without recreating it
+   * Restore selection after NetworkVis regeneration
    */
-  private updateNodeVisual(layerIndex: number, nodeIndex: number, newBias: number): void {
-    if (!this.interactionManager) return;
+  private restoreSelectionAfterRegeneration(): void {
+    if (!this.currentSelection || !this.interactionManager) return;
     
-    // Find the node object in the scene
-    const nodeObject = this.findNodeObject(layerIndex, nodeIndex);
-    if (!nodeObject) return;
-    
-    // Update node size and color based on bias
-    if (nodeObject instanceof THREE.Mesh) {
-      // Update node size based on bias magnitude (0.7x to 1.3x original size)
-      const biasMagnitude = Math.abs(newBias);
-      const sizeMultiplier = 0.7 + (biasMagnitude / 2) * 0.6; // Maps [0,2] bias to [0.7,1.3] size
-      nodeObject.scale.setScalar(sizeMultiplier);
+    // Use setTimeout to ensure the regeneration is complete before trying to restore selection
+    setTimeout(() => {
+      const { layerIndex, nodeIndex, sourceNodeIndex, targetNodeIndex } = this.currentSelection!;
       
-      // Update node color based on bias sign and magnitude
-      if (nodeObject.material instanceof THREE.MeshBasicMaterial) {
-        const normalizedBias = Math.max(-1, Math.min(1, newBias / 2)); // Clamp to [-1, 1]
-        const intensity = Math.abs(normalizedBias);
-        
-        let newColor: THREE.Color;
-        if (normalizedBias >= 0) {
-          // Positive bias: Green tones
-          newColor = new THREE.Color(0.2 + intensity * 0.3, 0.7 + intensity * 0.3, 0.2);
-        } else {
-          // Negative bias: Red tones
-          newColor = new THREE.Color(0.7 + intensity * 0.3, 0.2 + intensity * 0.3, 0.2);
-        }
-        
-        nodeObject.material.color.copy(newColor);
+      // Find the new object that matches our selection
+      const newSelectedObject = this.interactionManager!.updateSelectedObjectAfterRegeneration(
+        layerIndex, nodeIndex, sourceNodeIndex, targetNodeIndex
+      );
+      
+      if (newSelectedObject) {
+        // Update our current selection to point to the new object
+        this.currentSelection!.object = newSelectedObject;
       }
-    }
-  }
-
-  /**
-   * Update the visual representation of an edge (color, thickness) without recreating it
-   */
-  private updateEdgeVisual(layerIndex: number, fromNode: number, toNode: number, newWeight: number): void {
-    if (!this.interactionManager) return;
-    
-    // Find the edge object in the scene
-    const edgeObject = this.findEdgeObject(layerIndex, fromNode, toNode);
-    if (!edgeObject) return;
-    
-    // Update edge color and thickness based on weight
-    if (edgeObject instanceof THREE.Mesh && edgeObject.material instanceof THREE.MeshBasicMaterial) {
-      const absWeight = Math.abs(newWeight);
-      
-      // Update color based on weight sign and magnitude
-      let newColor: THREE.Color;
-      if (newWeight > 0) {
-        // Positive weights: Green shades
-        newColor = new THREE.Color(0x27ae60).lerp(new THREE.Color(0x2ecc71), absWeight);
-      } else {
-        // Negative weights: Red shades  
-        newColor = new THREE.Color(0xc0392b).lerp(new THREE.Color(0xe74c3c), absWeight);
-      }
-      
-      edgeObject.material.color.copy(newColor);
-      
-      // Update opacity based on weight magnitude
-      edgeObject.material.opacity = 0.4 + absWeight * 0.6;
-      
-      // Update edge thickness properly by modifying scale only in perpendicular directions
-      const thicknessMultiplier = Math.max(0.3, absWeight * 2); // Maps weight to thickness
-      this.updateEdgeThickness(edgeObject, thicknessMultiplier);
-    }
-  }
-
-  /**
-   * Update edge thickness by scaling only the perpendicular dimensions
-   */
-  private updateEdgeThickness(edgeObject: THREE.Mesh, thicknessMultiplier: number): void {
-    // For tube geometry, we need to be careful about how we scale
-    // We want to change radius but preserve the length and position
-    
-    // Store the current position and rotation
-    const position = edgeObject.position.clone();
-    const rotation = edgeObject.rotation.clone();
-    
-    // Reset transform to apply clean scaling
-    edgeObject.position.set(0, 0, 0);
-    edgeObject.rotation.set(0, 0, 0);
-    
-    // Apply thickness scaling - scale in X and Z but preserve Y (length direction)
-    // This assumes the tube was created along the Y axis initially
-    edgeObject.scale.set(thicknessMultiplier, 1, thicknessMultiplier);
-    
-    // Restore position and rotation
-    edgeObject.position.copy(position);
-    edgeObject.rotation.copy(rotation);
-  }
-
-  /**
-   * Find a node object in the scene by layer and node index
-   */
-  private findNodeObject(layerIndex: number, nodeIndex: number): THREE.Object3D | null {
-    if (!this.interactionManager) return null;
-    
-    // Access the scene through the interaction manager
-    const scene = (this.interactionManager as any).scene;
-    if (!scene) return null;
-    
-    let foundNode: THREE.Object3D | null = null;
-    scene.traverse((child: THREE.Object3D) => {
-      if (child.userData.type === 'network_node' &&
-          child.userData.layerIndex === layerIndex &&
-          child.userData.nodeIndex === nodeIndex) {
-        foundNode = child;
-      }
-    });
-    
-    return foundNode;
-  }
-
-  /**
-   * Find an edge object in the scene by layer and node indices
-   */
-  private findEdgeObject(layerIndex: number, fromNode: number, toNode: number): THREE.Object3D | null {
-    if (!this.interactionManager) return null;
-    
-    // Access the scene through the interaction manager
-    const scene = (this.interactionManager as any).scene;
-    if (!scene) return null;
-    
-    let foundEdge: THREE.Object3D | null = null;
-    scene.traverse((child: THREE.Object3D) => {
-      if (child.userData.type === 'network_edge' &&
-          child.userData.layerIndex === layerIndex &&
-          child.userData.sourceNodeIndex === fromNode &&
-          child.userData.targetNodeIndex === toNode) {
-        foundEdge = child;
-      }
-    });
-    
-    return foundEdge;
+    }, 50); // Small delay to ensure regeneration is complete
   }
 
   /**
