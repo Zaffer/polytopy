@@ -403,4 +403,25 @@ export class SimpleNeuralNetwork {
 
     return { mean, std, max };
   }
+
+  /**
+   * Update a specific weight in the network
+   */
+  public updateWeight(layerIndex: number, fromNodeIndex: number, toNodeIndex: number, newWeight: number): void {
+    if (layerIndex >= 0 && layerIndex < this.weights.length &&
+        fromNodeIndex >= 0 && fromNodeIndex < this.weights[layerIndex].length &&
+        toNodeIndex >= 0 && toNodeIndex < this.weights[layerIndex][fromNodeIndex].length) {
+      this.weights[layerIndex][fromNodeIndex][toNodeIndex] = newWeight;
+    }
+  }
+
+  /**
+   * Update a specific bias in the network
+   */
+  public updateBias(layerIndex: number, nodeIndex: number, newBias: number): void {
+    if (layerIndex >= 0 && layerIndex < this.biases.length &&
+        nodeIndex >= 0 && nodeIndex < this.biases[layerIndex].length) {
+      this.biases[layerIndex][nodeIndex] = newBias;
+    }
+  }
 }

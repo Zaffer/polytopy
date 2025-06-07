@@ -37,11 +37,12 @@ export class InteractionManager {
   // Observable streams for interactions
   private rightClickSubject = new Subject<InteractionData>();
   
-  // Visual feedback for objects
+  // Visual feedback for objects - Simple opacity approach
   private hoveredObject: THREE.Object3D | null = null;
   private selectedObject: THREE.Object3D | null = null;
-  private originalMaterials = new Map<THREE.Object3D, THREE.Material | THREE.Material[]>();
-  private originalNodeScales = new Map<THREE.Object3D, THREE.Vector3>();
+  
+  // Store original opacity values to restore later
+  private originalOpacity = new Map<THREE.Object3D, number>();
   
   constructor(camera: THREE.Camera, scene: THREE.Scene) {
     this.camera = camera;
@@ -187,93 +188,38 @@ export class InteractionManager {
     return interactables;
   }
 
-
-  
   /**
-   * Apply hover highlight to an object
+   * Apply hover highlight using opacity change
    */
   private applyHoverHighlight(object: THREE.Object3D): void {
-    if (object instanceof THREE.Mesh) {
-      // For nodes only, use simple scaling
-      if (object.userData.type === InteractableType.NETWORK_NODE) {
-        if (!this.originalNodeScales.has(object)) {
-          this.originalNodeScales.set(object, object.scale.clone());
-        }
-        const hoverScale = 1.05; // 5% larger for nodes
-        object.scale.setScalar(hoverScale);
-      }
-      // For edges, NO scaling - just material change (they already scale with weights)
-
-      // Store original material if not already stored
-      if (!this.originalMaterials.has(object)) {
-        this.originalMaterials.set(object, object.material);
-      }
-      
-      // Create hover material with enhanced emissive
-      const originalMaterial = Array.isArray(object.material) ? object.material[0] : object.material;
-      const hoverMaterial = originalMaterial.clone();
-      
-      if ('color' in hoverMaterial) {
-        hoverMaterial.color = new THREE.Color(0x00BFFF); // Bright blue for hover
-      }
-      if ('opacity' in hoverMaterial) {
-        hoverMaterial.opacity = 0.9;
-      }
-      if ('emissive' in hoverMaterial) {
-        hoverMaterial.emissive = new THREE.Color(0x0088ff); // Strong blue emissive glow
-      }
-      if ('emissiveIntensity' in hoverMaterial) {
-        hoverMaterial.emissiveIntensity = 0.8; // Very strong glow for edges
-      }
-      
-      object.material = hoverMaterial;
+    const mesh = object as THREE.Mesh;
+    const material = mesh.material as THREE.Material;
+    
+    // Store original opacity if not already stored
+    if (!this.originalOpacity.has(object)) {
+      this.originalOpacity.set(object, material.opacity);
     }
+    
+    // Make slightly more opaque on hover (0.9)
+    material.opacity = 0.9;
+    material.transparent = true;
   }
   
   /**
-   * Apply selection highlight to an object
+   * Apply selection highlight using opacity change
    */
   private applySelectionHighlight(object: THREE.Object3D): void {
-    if (object instanceof THREE.Mesh) {
-      // For nodes, restore normal scale and just use material highlighting
-      if (object.userData.type === InteractableType.NETWORK_NODE) {
-        if (!this.originalNodeScales.has(object)) {
-          this.originalNodeScales.set(object, object.scale.clone());
-        }
-        // Reset to original scale for selection (normal size)
-        const originalScale = this.originalNodeScales.get(object);
-        if (originalScale) {
-          object.scale.copy(originalScale);
-        } else {
-          object.scale.set(1, 1, 1);
-        }
-      }
-      // For edges, NO scaling - just material change (they already scale with weights)
-
-      // Store original material if not already stored
-      if (!this.originalMaterials.has(object)) {
-        this.originalMaterials.set(object, object.material);
-      }
-      
-      // Create selection material with enhanced emissive
-      const originalMaterial = Array.isArray(object.material) ? object.material[0] : object.material;
-      const selectionMaterial = originalMaterial.clone();
-      
-      if ('color' in selectionMaterial) {
-        selectionMaterial.color = new THREE.Color(0xFFD700); // Gold for selection
-      }
-      if ('opacity' in selectionMaterial) {
-        selectionMaterial.opacity = 1.0;
-      }
-      if ('emissive' in selectionMaterial) {
-        selectionMaterial.emissive = new THREE.Color(0xffaa00); // Strong golden emissive glow
-      }
-      if ('emissiveIntensity' in selectionMaterial) {
-        selectionMaterial.emissiveIntensity = 1.0; // Very strong glow for edges
-      }
-      
-      object.material = selectionMaterial;
+    const mesh = object as THREE.Mesh;
+    const material = mesh.material as THREE.Material;
+    
+    // Store original opacity if not already stored
+    if (!this.originalOpacity.has(object)) {
+      this.originalOpacity.set(object, material.opacity);
     }
+    
+    // Make completely opaque on selection (1.0)
+    material.opacity = 1.0;
+    material.transparent = false;
   }
 
   /**
@@ -281,8 +227,7 @@ export class InteractionManager {
    */
   private clearHoverHighlight(): void {
     if (this.hoveredObject) {
-      this.restoreOriginalMaterial(this.hoveredObject);
-      this.restoreOriginalNodeScale(this.hoveredObject);
+      this.restoreOriginalOpacity(this.hoveredObject);
       this.hoveredObject = null;
     }
   }
@@ -292,50 +237,25 @@ export class InteractionManager {
    */
   private clearSelectionHighlight(): void {
     if (this.selectedObject) {
-      this.restoreOriginalMaterial(this.selectedObject);
-      this.restoreOriginalNodeScale(this.selectedObject);
+      this.restoreOriginalOpacity(this.selectedObject);
       this.selectedObject = null;
     }
   }
   
   /**
-   * Restore original material for an object
+   * Restore original opacity
    */
-  private restoreOriginalMaterial(object: THREE.Object3D): void {
-    if (object instanceof THREE.Mesh) {
-      const originalMaterial = this.originalMaterials.get(object);
-      if (originalMaterial) {
-        // Dispose current material if it's a clone
-        if (Array.isArray(object.material)) {
-          object.material.forEach(mat => mat.dispose());
-        } else {
-          object.material.dispose();
-        }
-        
-        // Restore original
-        object.material = originalMaterial;
-        this.originalMaterials.delete(object);
-      }
+  private restoreOriginalOpacity(object: THREE.Object3D): void {
+    const mesh = object as THREE.Mesh;
+    const material = mesh.material as THREE.Material;
+    const originalOpacity = this.originalOpacity.get(object);
+    
+    if (originalOpacity !== undefined) {
+      material.opacity = originalOpacity;
+      material.transparent = originalOpacity < 1.0;
     }
   }
   
-  /**
-   * Restore original scale for nodes only
-   */
-  private restoreOriginalNodeScale(object: THREE.Object3D): void {
-    if (object.userData.type === InteractableType.NETWORK_NODE) {
-      const originalScale = this.originalNodeScales.get(object);
-      if (originalScale) {
-        object.scale.copy(originalScale);
-        this.originalNodeScales.delete(object);
-      } else {
-        // Reset to default if no original stored
-        object.scale.set(1, 1, 1);
-      }
-    }
-    // For edges, do nothing - they don't get scaled
-  }
-
   /**
    * Clear all highlights and selections
    */
@@ -349,6 +269,7 @@ export class InteractionManager {
    */
   public dispose(): void {
     this.clearAll();
+    this.originalOpacity.clear();
     this.rightClickSubject.complete();
   }
 }

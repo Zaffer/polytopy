@@ -2,6 +2,7 @@ import { SceneManager } from "./core/SceneManager";
 import { AppController } from "./core/AppController";
 import { VisualizationManager } from "./visualizations/VisualizationManager";
 import { LossChart } from "./components/LossChart";
+import { NetworkInspector } from "./components/NetworkInspector";
 import { DEFAULT_SCENE_CONFIG } from "./types/scene";
 import { setupControls } from "./components/controls";
 
@@ -13,6 +14,7 @@ export class Application {
   private appController: AppController;
   private visualizationManager: VisualizationManager;
   private lossChart: LossChart | null = null;
+  private networkInspector: NetworkInspector | null = null;
   
   constructor() {
     // Initialize components
@@ -59,6 +61,9 @@ export class Application {
     // Initialize loss chart
     this.lossChart = new LossChart();
     
+    // Initialize network inspector
+    this.setupNetworkInspector();
+    
     // Start the animation loop
     this.sceneManager.startAnimationLoop();
     
@@ -73,6 +78,31 @@ export class Application {
    */
   private setupControls(): HTMLElement {
     return setupControls(this.appController);
+  }
+
+  /**
+   * Set up network inspector panel
+   */
+  private setupNetworkInspector(): void {
+    // Create the network inspector
+    this.networkInspector = new NetworkInspector();
+    
+    // Get the interaction manager
+    const interactionManager = this.sceneManager.getInteractionManager();
+    
+    // Set the training manager so it can access network data
+    this.networkInspector.setTrainingManager(this.appController.getTrainingManager());
+    
+    // Set the interaction manager so it can clear selections
+    this.networkInspector.setInteractionManager(interactionManager);
+    
+    // Add the inspector panel to the document
+    document.body.appendChild(this.networkInspector.getElement());
+    
+    // Subscribe to right-click events from the interaction manager
+    interactionManager.getRightClickStream().subscribe(interaction => {
+      this.networkInspector?.showSelection(interaction);
+    });
   }
   
   /**
@@ -97,6 +127,13 @@ export class Application {
     this.sceneManager.dispose();
     if (this.lossChart) {
       this.lossChart.destroy();
+    }
+    if (this.networkInspector) {
+      // Remove from DOM
+      const element = this.networkInspector.getElement();
+      if (element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
     }
   }
 }

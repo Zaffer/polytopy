@@ -10,6 +10,7 @@ export function createControlsPanel(): HTMLElement {
   panel.style.top = '10px';
   panel.style.left = '10px';
   panel.style.zIndex = '1000';
+  panel.style.background = 'rgba(0, 0, 0, 0.8)';
   
   return panel;
 }

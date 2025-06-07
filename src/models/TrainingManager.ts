@@ -31,6 +31,9 @@ export class TrainingManager {
   // Sample counter for loss tracking
   private sampleCounter: number = 0;
   
+  // Track whether we're in manual editing mode (prevents auto-recreation)
+  private isInManualEditingMode: boolean = false;
+  
   constructor(private dataManager: DataManager) {
     this.appState = AppState.getInstance();
     
@@ -89,6 +92,45 @@ export class TrainingManager {
    */
   public getNetworkRecreated$(): Observable<void> {
     return this.networkRecreatedSubject.asObservable();
+  }
+
+  /**
+   * Notify that weights/biases have been manually updated (for real-time visualization)
+   */
+  public notifyManualWeightChange(): void {
+    // Update predictions to reflect the manual changes
+    this.updatePredictions();
+    
+    // For manual changes, we'll use a different approach to avoid recreating the entire visualization
+    // The NetworkInspector will handle visual updates more efficiently
+    // this.weightsUpdateSubject.next(); // Commented out to prevent full recreation
+  }
+  
+  /**
+   * Set manual editing mode to prevent automatic visualization recreation
+   */
+  public setManualEditingMode(enabled: boolean): void {
+    this.isInManualEditingMode = enabled;
+  }
+  
+  /**
+   * Check if we're in manual editing mode
+   */
+  public isManualEditingMode(): boolean {
+    return this.isInManualEditingMode;
+  }
+  
+  /**
+   * Get weights update observable - respects manual editing mode
+   */
+  /**
+   * Internal method to trigger weight updates (used by training loop)
+   */
+  private triggerWeightUpdate(): void {
+    // Only trigger if not in manual editing mode
+    if (!this.isInManualEditingMode) {
+      this.weightsUpdateSubject.next();
+    }
   }
   
   /**
@@ -207,7 +249,7 @@ export class TrainingManager {
       if (newEpoch % currentState.updateInterval === 0 || newEpoch >= currentState.epochs) {
         this.updatePredictions();
         // Notify that weights have been updated for real-time visualization
-        this.weightsUpdateSubject.next();
+        this.triggerWeightUpdate();
       }
       
       // Check if we need to continue training
@@ -272,7 +314,7 @@ export class TrainingManager {
   /**
    * Update predictions for the current data
    */
-  private updatePredictions(): void {
+  public updatePredictions(): void {
     const data = this.dataManager.getCurrentData();
     const height = data.length;
     const width = data[0].length;
