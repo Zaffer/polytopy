@@ -65,6 +65,15 @@ export class InteractionManager {
   }
   
   /**
+   * Set cursor to pointer when hovering over selectable object
+   */
+  public setPointerCursor(): void {
+    if (this.canvasElement) {
+      this.canvasElement.style.cursor = 'pointer';
+    }
+  }
+  
+  /**
    * Reset cursor to default
    */
   public setDefaultCursor(): void {
@@ -77,17 +86,10 @@ export class InteractionManager {
    * Handle hover during right-click hold
    */
   public handleRightClickHover(screenX: number, screenY: number): void {
+    // Use simple raycasting to find object under cursor
     this.updateMousePosition(screenX, screenY);
-    
-    // Find interactable objects
-    const interactables = this.findInteractableObjects();
-    const intersects = this.raycaster.intersectObjects(interactables, false);
-    
-    let newHoveredObject: THREE.Object3D | null = null;
-    
-    if (intersects.length > 0) {
-      newHoveredObject = intersects[0].object;
-    }
+    const intersects = this.raycaster.intersectObjects(this.findInteractableObjects());
+    const newHoveredObject = intersects.length > 0 ? intersects[0].object : null;
     
     // Update hover state if changed
     if (newHoveredObject !== this.hoveredObject) {
@@ -96,6 +98,11 @@ export class InteractionManager {
       if (newHoveredObject) {
         this.hoveredObject = newHoveredObject;
         this.applyHoverHighlight(this.hoveredObject);
+        // Change cursor to 'pointer' when hovering over selectable object
+        this.setPointerCursor();
+      } else {
+        // Change cursor back to 'crosshair' when not hovering over any object
+        this.setCrosshairCursor();
       }
     }
   }
@@ -144,6 +151,8 @@ export class InteractionManager {
    */
   public clearRightClickHover(): void {
     this.clearHoverHighlight();
+    // Reset cursor to crosshair when clearing hover (still in right-click mode)
+    this.setCrosshairCursor();
   }
   
   /**
@@ -177,6 +186,8 @@ export class InteractionManager {
     
     return interactables;
   }
+
+
   
   /**
    * Apply hover highlight to an object
