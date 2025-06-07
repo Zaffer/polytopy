@@ -99,8 +99,8 @@ export class Application {
     // Add the inspector panel to the document
     document.body.appendChild(this.networkInspector.getElement());
     
-    // Subscribe to right-click events from the interaction manager
-    interactionManager.getRightClickStream().subscribe(interaction => {
+    // Subscribe to left-click events from the interaction manager
+    interactionManager.getLeftClickStream().subscribe(interaction => {
       this.networkInspector?.showSelection(interaction);
     });
   }

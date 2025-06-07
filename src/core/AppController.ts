@@ -5,6 +5,7 @@ import { DataManager } from '../models/DataGenerator';
 import { TrainingManager } from '../models/TrainingManager';
 import { AppState } from './AppState';
 import { PatternType } from '../types/model';
+import { InteractableType } from './InteractionManager';
 
 /**
  * AppController handles application logic and communication between components
@@ -228,44 +229,43 @@ export class AppController {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions = [];
   }
-  
-  /**
+   /**
    * Set up interaction handling for the network visualization
    */
   private setupInteractionHandling(): void {
     const interactionManager = this.sceneManager.getInteractionManager();
     
-    // Subscribe to right-click events on network elements
+    // Subscribe to left-click events on network elements
     this.subscriptions.push(
-      interactionManager.getRightClickStream().subscribe(interaction => {
-        console.log('Network element right-clicked:', interaction);
+      interactionManager.getLeftClickStream().subscribe(interaction => {
+        console.log('Network element left-clicked:', interaction);
         
         // Handle different types of interactions
         switch (interaction.type) {
-          case 'network_node':
-            this.handleNodeRightClick(interaction);
+          case InteractableType.NETWORK_NODE:
+            this.handleNodeLeftClick(interaction);
             break;
-          case 'network_edge':
-            this.handleEdgeRightClick(interaction);
+          case InteractableType.NETWORK_EDGE:
+            this.handleEdgeLeftClick(interaction);
             break;
         }
       })
     );
   }
-  
+
   /**
-   * Handle right-click on a network node
+   * Handle left-click on a network node
    */
-  private handleNodeRightClick(interaction: any): void {
-    console.log(`Right-clicked node in layer ${interaction.layerIndex}, node ${interaction.nodeIndex}`);
+  private handleNodeLeftClick(interaction: any): void {
+    console.log(`Left-clicked node in layer ${interaction.layerIndex}, node ${interaction.nodeIndex}`);
     // TODO: Add node-specific functionality here
   }
   
   /**
-   * Handle right-click on a network edge
+   * Handle left-click on a network edge
    */
-  private handleEdgeRightClick(interaction: any): void {
-    console.log(`Right-clicked edge from layer ${interaction.layerIndex}, node ${interaction.sourceNodeIndex} to node ${interaction.targetNodeIndex}`);
+  private handleEdgeLeftClick(interaction: any): void {
+    console.log(`Left-clicked edge from layer ${interaction.layerIndex}, node ${interaction.sourceNodeIndex} to node ${interaction.targetNodeIndex}`);
     console.log(`Edge weight: ${interaction.object.userData.weight}`);
     // TODO: Add edge-specific functionality here
   }

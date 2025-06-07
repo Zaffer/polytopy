@@ -27,8 +27,12 @@ export class SceneManager {
   // Configuration
   private config: SceneConfig;
   
-  // Right-click state tracking
-  private isRightMouseDown: boolean = false;
+  // Left-click state tracking
+  private isLeftMouseDown: boolean = false;
+  
+  // Raycasting for interaction detection
+  private raycaster = new THREE.Raycaster();
+  private mouse = new THREE.Vector2();
 
   constructor(config: Partial<SceneConfig> = {}) {
     // Merge provided config with defaults
@@ -60,13 +64,13 @@ export class SceneManager {
     this.controls.dampingFactor = 0.1;
     
     // Custom mouse controls:
-    // - Left click (MOUSE.LEFT) = Pan/drag the camera
+    // - Left click (MOUSE.LEFT) = Pan/drag OR select (depending on what's clicked)
     // - Middle click (MOUSE.MIDDLE) = Rotate/orbit around target
-    // - Right click (MOUSE.RIGHT) = Disabled (do nothing)
+    // - Right click (MOUSE.RIGHT) = Pan/drag the camera
     this.controls.mouseButtons = {
-      LEFT: THREE.MOUSE.PAN,     // Left click to drag/pan
+      LEFT: THREE.MOUSE.PAN,      // Left click default to pan (dynamically disabled for selection)
       MIDDLE: THREE.MOUSE.ROTATE, // Middle click to rotate/orbit
-      RIGHT: null                 // Right click disabled
+      RIGHT: THREE.MOUSE.PAN      // Right click to drag/pan
     };
     
     // Add lights
@@ -121,14 +125,24 @@ export class SceneManager {
    * Handle mouse down events
    */
   private onMouseDown(event: MouseEvent): void {
-    if (event.button === 2) { // Right mouse button
-      this.isRightMouseDown = true;
+    if (event.button === 0) { // Left mouse button
+      // Check if clicking on an interactable object
+      this.updateMousePosition(event.clientX, event.clientY);
+      const intersects = this.raycaster.intersectObjects(this.findInteractableObjects());
       
-      // Set crosshair cursor for right-click interaction
-      this.interactionManager.setCrosshairCursor();
-      
-      // Start hover detection during right-click hold
-      this.interactionManager.handleRightClickHover(event.clientX, event.clientY);
+      if (intersects.length > 0) {
+        // Clicking on an object - disable panning and start selection interaction
+        this.isLeftMouseDown = true;
+        this.controls.enabled = false; // Disable orbit controls temporarily
+        
+        // Start hover detection during left-click hold
+        this.interactionManager.handleLeftClickHover(event.clientX, event.clientY);
+        event.preventDefault(); // Prevent any default behavior
+      } else {
+        // Clicking on empty space - clear selection and allow normal panning
+        this.interactionManager.clearAll();
+        // Let the controls handle panning normally (don't prevent default)
+      }
     }
   }
 
@@ -136,9 +150,19 @@ export class SceneManager {
    * Handle mouse move events
    */
   private onMouseMove(event: MouseEvent): void {
-    if (this.isRightMouseDown) {
-      // Update hover detection as mouse moves during right-click hold
-      this.interactionManager.handleRightClickHover(event.clientX, event.clientY);
+    if (this.isLeftMouseDown) {
+      // We're in selection mode - update hover detection
+      this.interactionManager.handleLeftClickHover(event.clientX, event.clientY);
+    } else {
+      // Not holding left mouse - check for hover to show pointer cursor
+      this.updateMousePosition(event.clientX, event.clientY);
+      const intersects = this.raycaster.intersectObjects(this.findInteractableObjects());
+      
+      if (intersects.length > 0) {
+        this.interactionManager.setPointerCursor();
+      } else {
+        this.interactionManager.setDefaultCursor();
+      }
     }
   }
 
@@ -146,29 +170,41 @@ export class SceneManager {
    * Handle mouse up events
    */
   private onMouseUp(event: MouseEvent): void {
-    if (event.button === 2 && this.isRightMouseDown) { // Right mouse button
-      this.isRightMouseDown = false;
+    if (event.button === 0 && this.isLeftMouseDown) { // Left mouse button
+      this.isLeftMouseDown = false;
       
-      // Reset cursor to default
-      this.interactionManager.setDefaultCursor();
+      // Re-enable orbit controls
+      this.controls.enabled = true;
       
-      // Finalize the interaction - convert hover to selection
-      this.interactionManager.handleRightClickRelease(event.clientX, event.clientY);
+      // Finalize the selection interaction
+      this.interactionManager.handleLeftClickRelease(event.clientX, event.clientY);
+      
+      // Reset cursor based on what's under the mouse
+      this.updateMousePosition(event.clientX, event.clientY);
+      const intersects = this.raycaster.intersectObjects(this.findInteractableObjects());
+      if (intersects.length > 0) {
+        this.interactionManager.setPointerCursor();
+      } else {
+        this.interactionManager.setDefaultCursor();
+      }
     }
   }
 
   /**
-   * Handle mouse leave events - cancel right-click interaction if mouse leaves canvas
+   * Handle mouse leave events - cancel left-click interaction if mouse leaves canvas
    */
   private onMouseLeave(_event: MouseEvent): void {
-    if (this.isRightMouseDown) {
-      this.isRightMouseDown = false;
+    if (this.isLeftMouseDown) {
+      this.isLeftMouseDown = false;
+      
+      // Re-enable orbit controls
+      this.controls.enabled = true;
+      
+      // Clear any hover state without finalizing selection
+      this.interactionManager.clearLeftClickHover();
       
       // Reset cursor to default when leaving canvas
       this.interactionManager.setDefaultCursor();
-      
-      // Clear any hover state without finalizing selection
-      this.interactionManager.clearRightClickHover();
     }
   }
 
@@ -206,6 +242,22 @@ export class SceneManager {
     this.renderer.domElement.removeEventListener('contextmenu', this.onContextMenu.bind(this));
   }
   
+  /**
+   * Update mouse position for raycasting
+   */
+  private updateMousePosition(screenX: number, screenY: number): void {
+    this.mouse.x = (screenX / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(screenY / window.innerHeight) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+  }
+  
+  /**
+   * Find all interactable objects in the scene
+   */
+  private findInteractableObjects(): THREE.Object3D[] {
+    return this.interactionManager.findInteractableObjects();
+  }
+
   // Panel management methods
   
   /**

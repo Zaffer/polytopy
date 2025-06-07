@@ -36,6 +36,7 @@ export class InteractionManager {
   
   // Observable streams for interactions
   private rightClickSubject = new Subject<InteractionData>();
+  private leftClickSubject = new Subject<InteractionData>();
   
   // Visual feedback for objects - Simple opacity approach
   private hoveredObject: THREE.Object3D | null = null;
@@ -83,6 +84,86 @@ export class InteractionManager {
     }
   }
   
+  /**
+   * Handle hover during left-click hold
+   */
+  public handleLeftClickHover(screenX: number, screenY: number): void {
+    // Use simple raycasting to find object under cursor
+    this.updateMousePosition(screenX, screenY);
+    const intersects = this.raycaster.intersectObjects(this.findInteractableObjects());
+    const newHoveredObject = intersects.length > 0 ? intersects[0].object : null;
+    
+    // Update hover state if changed
+    if (newHoveredObject !== this.hoveredObject) {
+      this.clearHoverHighlight();
+      
+      if (newHoveredObject) {
+        this.hoveredObject = newHoveredObject;
+        this.applyHoverHighlight(this.hoveredObject);
+        // Change cursor to 'pointer' when hovering over selectable object
+        this.setPointerCursor();
+      } else {
+        // Change cursor back to 'default' when not hovering over any object
+        this.setDefaultCursor();
+      }
+    }
+  }
+
+  /**
+   * Handle left-click release - finalize selection
+   */
+  public handleLeftClickRelease(screenX: number, screenY: number): void {
+    this.updateMousePosition(screenX, screenY);
+    
+    // Clear any previous selection
+    this.clearSelectionHighlight();
+    
+    // If we have a hovered object, make it the selected object
+    if (this.hoveredObject) {
+      const userData = this.hoveredObject.userData;
+      
+      // Create interaction data
+      const interactionData: InteractionData = {
+        type: userData.type,
+        object: this.hoveredObject,
+        layerIndex: userData.layerIndex,
+        nodeIndex: userData.nodeIndex,
+        sourceNodeIndex: userData.sourceNodeIndex,
+        targetNodeIndex: userData.targetNodeIndex,
+        position: new THREE.Vector3() // Will be updated by raycaster if needed
+      };
+      
+      // Move hovered object to selected state
+      this.selectedObject = this.hoveredObject;
+      this.hoveredObject = null;
+      
+      // Apply selection highlight (different from hover)
+      this.applySelectionHighlight(this.selectedObject);
+      
+      // Emit the interaction
+      this.leftClickSubject.next(interactionData);
+    } else {
+      // Clear hover if no object was under cursor
+      this.clearHoverHighlight();
+    }
+  }
+
+  /**
+   * Clear left-click hover state
+   */
+  public clearLeftClickHover(): void {
+    this.clearHoverHighlight();
+    // Reset cursor to default when clearing hover
+    this.setDefaultCursor();
+  }
+
+  /**
+   * Get observable for left-click interactions
+   */
+  public getLeftClickStream(): Observable<InteractionData> {
+    return this.leftClickSubject.asObservable();
+  }
+
   /**
    * Handle hover during right-click hold
    */
@@ -175,7 +256,7 @@ export class InteractionManager {
   /**
    * Find all interactable objects in the scene
    */
-  private findInteractableObjects(): THREE.Object3D[] {
+  public findInteractableObjects(): THREE.Object3D[] {
     const interactables: THREE.Object3D[] = [];
     
     this.scene.traverse((child) => {
@@ -271,6 +352,7 @@ export class InteractionManager {
     this.clearAll();
     this.originalOpacity.clear();
     this.rightClickSubject.complete();
+    this.leftClickSubject.complete();
   }
 
   /**
