@@ -250,10 +250,19 @@ export class NetworkInspector {
 
     const slider = document.createElement('input');
     slider.type = 'range';
-    slider.min = '-2';
-    slider.max = '2';
-    slider.step = '0.01';
+    slider.min = '-5';
+    slider.max = '5';
+    slider.step = '0.001';
     slider.value = currentBias.toString();
+    
+    // Add wheel event listener directly to slider
+    slider.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = -Math.sign(e.deltaY) * 0.01; // 0.01 step per wheel tick
+      const newValue = Math.max(-5, Math.min(5, parseFloat(slider.value) + delta));
+      slider.value = newValue.toString();
+      slider.dispatchEvent(new Event('input')); // Trigger the input event
+    });
 
     const valueDisplay = document.createElement('div');
     valueDisplay.textContent = currentBias.toFixed(4);
@@ -296,10 +305,19 @@ export class NetworkInspector {
 
     const slider = document.createElement('input');
     slider.type = 'range';
-    slider.min = '-2';
-    slider.max = '2';
-    slider.step = '0.01';
+    slider.min = '-5';
+    slider.max = '5';
+    slider.step = '0.001';
     slider.value = currentWeight.toString();
+    
+    // Add wheel event listener directly to slider
+    slider.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = -Math.sign(e.deltaY) * 0.01; // 0.01 step per wheel tick
+      const newValue = Math.max(-5, Math.min(5, parseFloat(slider.value) + delta));
+      slider.value = newValue.toString();
+      slider.dispatchEvent(new Event('input')); // Trigger the input event
+    });
 
     const valueDisplay = document.createElement('div');
     valueDisplay.textContent = currentWeight.toFixed(4);
@@ -409,10 +427,19 @@ export class NetworkInspector {
 
     const slider = document.createElement('input');
     slider.type = 'range';
-    slider.min = '-2';
-    slider.max = '2';
-    slider.step = '0.01';
+    slider.min = '-5';
+    slider.max = '5';
+    slider.step = '0.001';
     slider.value = weight.toString();
+    
+    // Add wheel event listener directly to slider
+    slider.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = -Math.sign(e.deltaY) * 0.01; // 0.01 step per wheel tick
+      const newValue = Math.max(-5, Math.min(5, parseFloat(slider.value) + delta));
+      slider.value = newValue.toString();
+      slider.dispatchEvent(new Event('input')); // Trigger the input event
+    });
 
     const valueSpan = document.createElement('span');
     valueSpan.textContent = weight.toFixed(3);
