@@ -69,7 +69,7 @@ export interface VisualizationOptions {
  */
 export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
   inputSize: 2, // x, y coordinates
-  hiddenSizes: [8, 8], // Two hidden layers with 8 neurons each
+  hiddenSizes: [4, 4], // Two hidden layers with 4 neurons each
   outputSize: 1,
   learningRate: 0.05,
   batchSize: 32,
