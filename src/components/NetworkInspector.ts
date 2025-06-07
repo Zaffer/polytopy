@@ -119,7 +119,7 @@ export class NetworkInspector {
     
     // Create title span
     const titleSpan = document.createElement('span');
-    titleSpan.textContent = `Neuron Inspector - Layer ${layerIndex}, Neuron ${nodeIndex}`;
+    titleSpan.textContent = `Neuron (Layer ${layerIndex}, Neuron ${nodeIndex})`;
     
     mainLegend.appendChild(closeButton);
     mainLegend.appendChild(toggleButton);
@@ -190,7 +190,7 @@ export class NetworkInspector {
     
     // Create title span
     const titleSpan = document.createElement('span');
-    titleSpan.textContent = `Connection - Layer ${layerIndex}→${layerIndex + 1}, Neuron ${sourceNodeIndex}→${targetNodeIndex}`;
+    titleSpan.textContent = `Synapse (Layer ${layerIndex} → ${layerIndex + 1}, Neuron ${sourceNodeIndex} → ${targetNodeIndex})`;
     
     mainLegend.appendChild(closeButton);
     mainLegend.appendChild(toggleButton);

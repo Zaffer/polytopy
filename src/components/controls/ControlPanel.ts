@@ -250,7 +250,11 @@ export function setupControls(appController: AppController): HTMLElement {
   polytopeVisualsFieldset.appendChild(polytopeVisualsLegend);
   collapsibleContent.appendChild(polytopeVisualsFieldset);
   
-  const analyticalPolytopesCheckbox = addCheckbox(polytopeVisualsFieldset, "Analytic (First Layer)", true, (checked) => {
+   const linesCheckbox = addCheckbox(polytopeVisualsFieldset, "Lines (1st Layer)", true, (checked) => {
+    uiManager.onPanelVisibilityChange("lines", checked);
+  });
+  
+  const analyticalPolytopesCheckbox = addCheckbox(polytopeVisualsFieldset, "Analytic (1st Layer)", true, (checked) => {
     uiManager.onPanelVisibilityChange("analyticalPolytopes", checked);
   });
   
@@ -258,10 +262,7 @@ export function setupControls(appController: AppController): HTMLElement {
     uiManager.onPanelVisibilityChange("polytopes", checked);
   });
   
-  const linesCheckbox = addCheckbox(polytopeVisualsFieldset, "Lines", true, (checked) => {
-    uiManager.onPanelVisibilityChange("lines", checked);
-  });
-  
+ 
   // Register visibility checkboxes with the UI manager
   uiManager.registerVisibilityCheckboxes(
     trainingDataCheckbox,

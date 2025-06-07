@@ -269,9 +269,9 @@ export class SceneManager {
       PanelType.TRAINING_DATA,
       PanelType.NEURAL_NETWORK,
       PanelType.PREDICTIONS,
+      PanelType.LINES,
       PanelType.ANALYTICAL_POLYTOPES,
-      PanelType.POLYTOPES,
-      PanelType.LINES
+      PanelType.POLYTOPES
     ];
 
     // Calculate position based on the proper panel order
@@ -328,9 +328,9 @@ export class SceneManager {
       PanelType.TRAINING_DATA,
       PanelType.NEURAL_NETWORK,
       PanelType.PREDICTIONS,
+      PanelType.LINES,
       PanelType.ANALYTICAL_POLYTOPES,
-      PanelType.POLYTOPES,
-      PanelType.LINES
+      PanelType.POLYTOPES
     ];
 
     const changedPanelIndex = panelOrder.indexOf(changedPanelName);
