@@ -119,7 +119,7 @@ export class NetworkInspector {
     
     // Create title span
     const titleSpan = document.createElement('span');
-    titleSpan.textContent = `Node Inspector - Layer ${layerIndex}, Node ${nodeIndex}`;
+    titleSpan.textContent = `Neuron Inspector - Layer ${layerIndex}, Neuron ${nodeIndex}`;
     
     mainLegend.appendChild(closeButton);
     mainLegend.appendChild(toggleButton);
@@ -190,7 +190,7 @@ export class NetworkInspector {
     
     // Create title span
     const titleSpan = document.createElement('span');
-    titleSpan.textContent = `Edge Inspector - Layer ${layerIndex} → ${layerIndex + 1} (Node ${sourceNodeIndex} → Node ${targetNodeIndex})`;
+    titleSpan.textContent = `Connection - Layer ${layerIndex}→${layerIndex + 1}, Neuron ${sourceNodeIndex}→${targetNodeIndex}`;
     
     mainLegend.appendChild(closeButton);
     mainLegend.appendChild(toggleButton);
@@ -202,6 +202,12 @@ export class NetworkInspector {
 
     // Weight control
     this.createWeightControl(collapsibleContent);
+
+    // Source neuron control
+    this.createSourceNeuronControl(collapsibleContent);
+
+    // Target neuron control
+    this.createTargetNeuronControl(collapsibleContent);
 
     mainFieldset.appendChild(collapsibleContent);
 
@@ -245,7 +251,7 @@ export class NetworkInspector {
 
     const fieldset = document.createElement('fieldset');
     const legend = document.createElement('legend');
-    legend.textContent = 'Node Bias';
+    legend.textContent = 'Neuron Bias';
     fieldset.appendChild(legend);
     
     const container = document.createElement('div');
@@ -269,21 +275,17 @@ export class NetworkInspector {
       slider.dispatchEvent(new Event('input')); // Trigger the input event
     });
 
-    const valueDisplay = document.createElement('div');
-    valueDisplay.textContent = currentBias.toFixed(4);
-
     slider.addEventListener('input', () => {
       const newValue = parseFloat(slider.value);
       label.textContent = `Bias: ${newValue.toFixed(4)}`;
-      valueDisplay.textContent = newValue.toFixed(4);
       
       // Update bias and trigger full regeneration
       this.updateNodeBias(layerIndex!, nodeIndex!, newValue);
     });
 
     container.appendChild(label);
+    container.appendChild(document.createElement('br'));
     container.appendChild(slider);
-    container.appendChild(valueDisplay);
     fieldset.appendChild(container);
     parent.appendChild(fieldset);
   }
@@ -300,7 +302,7 @@ export class NetworkInspector {
 
     const fieldset = document.createElement('fieldset');
     const legend = document.createElement('legend');
-    legend.textContent = 'Connection Weight';
+    legend.textContent = 'Synaptic Weight';
     fieldset.appendChild(legend);
     
     const container = document.createElement('div');
@@ -324,21 +326,17 @@ export class NetworkInspector {
       slider.dispatchEvent(new Event('input')); // Trigger the input event
     });
 
-    const valueDisplay = document.createElement('div');
-    valueDisplay.textContent = currentWeight.toFixed(4);
-
     slider.addEventListener('input', () => {
       const newValue = parseFloat(slider.value);
       label.textContent = `Weight: ${newValue.toFixed(4)}`;
-      valueDisplay.textContent = newValue.toFixed(4);
       
       // Update weight and trigger full regeneration
       this.updateConnectionWeight(layerIndex!, sourceNodeIndex!, targetNodeIndex!, newValue);
     });
 
     container.appendChild(label);
+    container.appendChild(document.createElement('br'));
     container.appendChild(slider);
-    container.appendChild(valueDisplay);
     fieldset.appendChild(container);
     parent.appendChild(fieldset);
   }
@@ -359,7 +357,7 @@ export class NetworkInspector {
     
     const fieldset = document.createElement('fieldset');
     const legend = document.createElement('legend');
-    legend.textContent = 'Incoming Connections';
+    legend.textContent = 'Incoming Synapses';
     fieldset.appendChild(legend);
     
     // Get all nodes from previous layer
@@ -374,7 +372,7 @@ export class NetworkInspector {
 
     for (let fromNode = 0; fromNode < prevLayerSize; fromNode++) {
       const weight = network.getWeight(prevLayerIndex, fromNode, nodeIndex!);
-      this.createConnectionRow(fieldset, `Layer ${prevLayerIndex}, Node ${fromNode}`, weight, 
+      this.createConnectionRow(fieldset, `Layer ${prevLayerIndex}, Neuron ${fromNode}`, weight, 
         (newValue: number) => this.updateConnectionWeight(prevLayerIndex, fromNode, nodeIndex!, newValue));
     }
 
@@ -397,7 +395,7 @@ export class NetworkInspector {
 
     const fieldset = document.createElement('fieldset');
     const legend = document.createElement('legend');
-    legend.textContent = 'Outgoing Connections';
+    legend.textContent = 'Outgoing Synapses';
     fieldset.appendChild(legend);
     
     // Get all nodes from next layer
@@ -412,7 +410,7 @@ export class NetworkInspector {
 
     for (let toNode = 0; toNode < nextLayerSize; toNode++) {
       const weight = network.getWeight(layerIndex!, nodeIndex!, toNode);
-      this.createConnectionRow(fieldset, `Layer ${nextLayerIndex}, Node ${toNode}`, weight,
+      this.createConnectionRow(fieldset, `Layer ${nextLayerIndex}, Neuron ${toNode}`, weight,
         (newValue: number) => this.updateConnectionWeight(layerIndex!, nodeIndex!, toNode, newValue));
     }
 
@@ -425,10 +423,8 @@ export class NetworkInspector {
   private createConnectionRow(parent: HTMLElement, connectionLabel: string, weight: number, onUpdate: (value: number) => void): void {
     const row = document.createElement('div');
 
-    const label = document.createElement('div');
-    label.textContent = connectionLabel;
-
-    const weightControl = document.createElement('div');
+    const label = document.createElement('label');
+    label.textContent = `${connectionLabel}: ${weight.toFixed(3)}`;
 
     const slider = document.createElement('input');
     slider.type = 'range';
@@ -446,19 +442,15 @@ export class NetworkInspector {
       slider.dispatchEvent(new Event('input')); // Trigger the input event
     });
 
-    const valueSpan = document.createElement('span');
-    valueSpan.textContent = weight.toFixed(3);
-
     slider.addEventListener('input', () => {
       const newValue = parseFloat(slider.value);
-      valueSpan.textContent = newValue.toFixed(3);
+      label.textContent = `${connectionLabel}: ${newValue.toFixed(3)}`;
       onUpdate(newValue);
     });
 
-    weightControl.appendChild(slider);
-    weightControl.appendChild(valueSpan);
     row.appendChild(label);
-    row.appendChild(weightControl);
+    row.appendChild(document.createElement('br'));
+    row.appendChild(slider);
     parent.appendChild(row);
   }
 
@@ -494,6 +486,112 @@ export class NetworkInspector {
     
     // Restore selection after regeneration
     this.restoreSelectionAfterRegeneration();
+  }
+
+  /**
+   * Create bias control for the source neuron in a connection
+   */
+  private createSourceNeuronControl(parent: HTMLElement): void {
+    if (!this.trainingManager || !this.currentSelection) return;
+
+    const { layerIndex, sourceNodeIndex } = this.currentSelection;
+    
+    // Skip if source is input layer (no bias)
+    if (layerIndex === 0) return;
+    
+    const network = this.trainingManager.getNeuralNetwork();
+    // Adjust layer index for bias array (input layer has no bias)
+    const currentBias = network.getBias(layerIndex! - 1, sourceNodeIndex!);
+
+    const fieldset = document.createElement('fieldset');
+    const legend = document.createElement('legend');
+    legend.textContent = `Source Neuron ${sourceNodeIndex} (Layer ${layerIndex})`;
+    fieldset.appendChild(legend);
+    
+    const container = document.createElement('div');
+
+    const label = document.createElement('label');
+    label.textContent = `Bias: ${currentBias.toFixed(4)}`;
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '-5';
+    slider.max = '5';
+    slider.step = '0.001';
+    slider.value = currentBias.toString();
+    
+    // Add wheel event listener
+    slider.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = -Math.sign(e.deltaY) * 0.01;
+      const newValue = Math.max(-5, Math.min(5, parseFloat(slider.value) + delta));
+      slider.value = newValue.toString();
+      slider.dispatchEvent(new Event('input'));
+    });
+
+    slider.addEventListener('input', () => {
+      const newValue = parseFloat(slider.value);
+      label.textContent = `Bias: ${newValue.toFixed(4)}`;
+      this.updateNodeBias(layerIndex!, sourceNodeIndex!, newValue);
+    });
+
+    container.appendChild(label);
+    container.appendChild(document.createElement('br'));
+    container.appendChild(slider);
+    fieldset.appendChild(container);
+    parent.appendChild(fieldset);
+  }
+
+  /**
+   * Create bias control for the target neuron in a connection
+   */
+  private createTargetNeuronControl(parent: HTMLElement): void {
+    if (!this.trainingManager || !this.currentSelection) return;
+
+    const { layerIndex, targetNodeIndex } = this.currentSelection;
+    const targetLayerIndex = layerIndex! + 1;
+    
+    const network = this.trainingManager.getNeuralNetwork();
+    // Adjust layer index for bias array (input layer has no bias)
+    const currentBias = network.getBias(targetLayerIndex - 1, targetNodeIndex!);
+
+    const fieldset = document.createElement('fieldset');
+    const legend = document.createElement('legend');
+    legend.textContent = `Target Neuron ${targetNodeIndex} (Layer ${targetLayerIndex})`;
+    fieldset.appendChild(legend);
+    
+    const container = document.createElement('div');
+
+    const label = document.createElement('label');
+    label.textContent = `Bias: ${currentBias.toFixed(4)}`;
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '-5';
+    slider.max = '5';
+    slider.step = '0.001';
+    slider.value = currentBias.toString();
+    
+    // Add wheel event listener
+    slider.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = -Math.sign(e.deltaY) * 0.01;
+      const newValue = Math.max(-5, Math.min(5, parseFloat(slider.value) + delta));
+      slider.value = newValue.toString();
+      slider.dispatchEvent(new Event('input'));
+    });
+
+    slider.addEventListener('input', () => {
+      const newValue = parseFloat(slider.value);
+      label.textContent = `Bias: ${newValue.toFixed(4)}`;
+      this.updateNodeBias(targetLayerIndex, targetNodeIndex!, newValue);
+    });
+
+    container.appendChild(label);
+    container.appendChild(document.createElement('br'));
+    container.appendChild(slider);
+    fieldset.appendChild(container);
+    parent.appendChild(fieldset);
   }
 
   /**

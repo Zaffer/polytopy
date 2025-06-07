@@ -2,23 +2,23 @@ import * as THREE from "three";
 import { Observable, Subject } from "rxjs";
 
 /**
- * Types of objects that can be interacted with
+ * Types of neural network objects that can be interacted with
  */
 export enum InteractableType {
-  NETWORK_NODE = "network_node",
-  NETWORK_EDGE = "network_edge"
+  NETWORK_NODE = "network_neuron",  // Neural network neurons
+  NETWORK_EDGE = "network_synapse"  // Neural network synapses (connections)
 }
 
 /**
- * Interaction data for clicked objects
+ * Interaction data for clicked neural network objects
  */
 export interface InteractionData {
   type: InteractableType;
   object: THREE.Object3D;
   layerIndex: number;
-  nodeIndex?: number;
-  sourceNodeIndex?: number;
-  targetNodeIndex?: number;
+  nodeIndex?: number;        // For neurons: index within the layer
+  sourceNodeIndex?: number;  // For synapses: source neuron index
+  targetNodeIndex?: number;  // For synapses: target neuron index
   position: THREE.Vector3;
 }
 
