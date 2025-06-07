@@ -6,6 +6,7 @@ import { VisualizationManager } from "../visualizations/VisualizationManager";
 import { PanelType, SceneConfig, DEFAULT_SCENE_CONFIG } from "../types/scene";
 import { PanelLabels } from "../components/PanelLabels";
 import { SelectionIndicator } from "../components/SelectionIndicator";
+import { InteractionManager } from "./InteractionManager";
 
 /**
  * SceneManager class responsible for the core 3D scene setup and management
@@ -22,6 +23,7 @@ export class SceneManager {
   private visualizationManager: VisualizationManager;
   private panelLabels: PanelLabels;
   private selectionIndicator: SelectionIndicator;
+  private interactionManager: InteractionManager;
   
   // Configuration
   private config: SceneConfig;
@@ -84,10 +86,14 @@ export class SceneManager {
     // Initialize selection indicator
     this.selectionIndicator = new SelectionIndicator(this.scene, this.camera);
     
+    // Initialize interaction manager
+    this.interactionManager = new InteractionManager(this.camera, this.scene);
+    
     // Add mouse event listeners for selection indicator
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
     this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.renderer.domElement.addEventListener('mouseup', this.onMouseUp.bind(this));
+    this.renderer.domElement.addEventListener('mouseleave', this.onMouseLeave.bind(this));
     this.renderer.domElement.addEventListener('contextmenu', this.onContextMenu.bind(this));
   }
   
@@ -119,6 +125,9 @@ export class SceneManager {
     if (event.button === 2) { // Right mouse button
       this.isRightMouseDown = true;
       this.selectionIndicator.showHoldIndicator(event.clientX, event.clientY);
+      
+      // Start hover detection during right-click hold
+      this.interactionManager.handleRightClickHover(event.clientX, event.clientY);
     }
   }
 
@@ -128,6 +137,9 @@ export class SceneManager {
   private onMouseMove(event: MouseEvent): void {
     if (this.isRightMouseDown) {
       this.selectionIndicator.updateHoldIndicator(event.clientX, event.clientY);
+      
+      // Update hover detection as mouse moves during right-click hold
+      this.interactionManager.handleRightClickHover(event.clientX, event.clientY);
     }
   }
 
@@ -137,7 +149,23 @@ export class SceneManager {
   private onMouseUp(event: MouseEvent): void {
     if (event.button === 2 && this.isRightMouseDown) { // Right mouse button
       this.isRightMouseDown = false;
+      
+      // Finalize the interaction - convert hover to selection
+      this.interactionManager.handleRightClickRelease(event.clientX, event.clientY);
+      
+      // Show selection indicator animation
       this.selectionIndicator.createIndicator(event.clientX, event.clientY);
+    }
+  }
+
+  /**
+   * Handle mouse leave events - cancel right-click interaction if mouse leaves canvas
+   */
+  private onMouseLeave(_event: MouseEvent): void {
+    if (this.isRightMouseDown) {
+      this.isRightMouseDown = false;
+      // Clear any hover state without finalizing selection
+      this.interactionManager.clearRightClickHover();
     }
   }
 
@@ -166,11 +194,13 @@ export class SceneManager {
     this.visualizationManager.dispose();
     this.panelLabels.dispose();
     this.selectionIndicator.dispose();
+    this.interactionManager.dispose();
     this.renderer.setAnimationLoop(null);
     window.removeEventListener("resize", this.onWindowResize.bind(this));
     this.renderer.domElement.removeEventListener('mousedown', this.onMouseDown.bind(this));
     this.renderer.domElement.removeEventListener('mousemove', this.onMouseMove.bind(this));
     this.renderer.domElement.removeEventListener('mouseup', this.onMouseUp.bind(this));
+    this.renderer.domElement.removeEventListener('mouseleave', this.onMouseLeave.bind(this));
     this.renderer.domElement.removeEventListener('contextmenu', this.onContextMenu.bind(this));
   }
   
@@ -358,5 +388,9 @@ export class SceneManager {
   
   public getCamera(): THREE.PerspectiveCamera {
     return this.camera;
+  }
+  
+  public getInteractionManager(): InteractionManager {
+    return this.interactionManager;
   }
 }

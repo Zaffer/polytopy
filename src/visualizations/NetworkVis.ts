@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { NeuralNetworkStructure } from "../types/model";
 import { SimpleNeuralNetwork } from "../models/NeuralNetworkTrainer";
+import { InteractableType } from "../core/InteractionManager";
 
 export function createNeuralNetworkVisualization(
   networkStructure: NeuralNetworkStructure,
@@ -96,6 +97,13 @@ export function createNeuralNetworkVisualization(
       });
       const node = new THREE.Mesh(geometry, material);
       
+      // Add interaction metadata
+      node.userData = {
+        type: InteractableType.NETWORK_NODE,
+        layerIndex: layerIndex,
+        nodeIndex: nodeIndex
+      };
+      
       node.position.set(
         0,
         i * nodeSpacing - (displayCount * nodeSpacing) / 2 + nodeSpacing / 2,
@@ -189,6 +197,16 @@ export function createNeuralNetworkVisualization(
         });
         
         const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+        
+        // Add interaction metadata
+        tube.userData = {
+          type: InteractableType.NETWORK_EDGE,
+          layerIndex: layerIndex,
+          sourceNodeIndex: sourceNodeIndex,
+          targetNodeIndex: targetNodeIndex,
+          weight: actualWeight
+        };
+        
         connectionGroup.add(tube);
       }
     }

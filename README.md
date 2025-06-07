@@ -1,5 +1,14 @@
 # POLYTOPY
 
+## TODO
+
+- [ ] Add strange area to data.
+
+   As per: https://arxiv.org/pdf/2210.01892
+   > "This reflects an abundance of unexpected structure"
+
+   Test capacity of polysemantic neurons to learn unexpected structure, ie. a regular shape with one strange portion. Expect that this area will take up relatively more neurons to learn.
+
 ## Background
 - Some experiments to help me understand Neural Nets better
   - https://addxorrol.blogspot.com/2024/07/some-experiments-to-help-me-understand.html?m=1
@@ -9,14 +18,10 @@
 - [Interpreting Neural Networks through the Polytope Lens](https://www.lesswrong.com/posts/eDicGjD9yte6FLSie/interpreting-neural-networks-through-the-polytope-lens)
 - [On polytopes](https://www.lesswrong.com/posts/GdCCiWQWnQCWq9wBE/on-polytopes)
 
-
-
 ## Setup
 
    ```
    npm install
-   ```
-   ```
    npm start
    ```
  `http://localhost:3000`
@@ -25,14 +30,6 @@
 
 The application initializes a 3D scene for machine learning visualizations using THREE.js and WebGPU.
 
-## TODO
-
-- [ ] Add strange area to data.
-
-   As per: https://arxiv.org/pdf/2210.01892
-   > "This reflects an abundance of unexpected structure"
-
-   Test capacity of polysemantic neurons to learn unexpected structure, ie. a regular shape with one strange portion. Expect that this area will take up relatively more neurons to learn.
 
 ## Technical Details (for the agents 🤖)
 

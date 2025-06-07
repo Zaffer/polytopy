@@ -25,6 +25,9 @@ export class AppController {
     this.dataManager = new DataManager(gridWidth, gridHeight, initialPattern);
     this.trainingManager = new TrainingManager(this.dataManager);
     
+    // Set up interaction handling for network visualization
+    this.setupInteractionHandling();
+    
     // Subscribe to visualization options to update panel visibility
     this.subscriptions.push(
       this.appState.visualizationOptions.subscribe(options => {
@@ -224,5 +227,46 @@ export class AppController {
     // Clean up subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions = [];
+  }
+  
+  /**
+   * Set up interaction handling for the network visualization
+   */
+  private setupInteractionHandling(): void {
+    const interactionManager = this.sceneManager.getInteractionManager();
+    
+    // Subscribe to right-click events on network elements
+    this.subscriptions.push(
+      interactionManager.getRightClickStream().subscribe(interaction => {
+        console.log('Network element right-clicked:', interaction);
+        
+        // Handle different types of interactions
+        switch (interaction.type) {
+          case 'network_node':
+            this.handleNodeRightClick(interaction);
+            break;
+          case 'network_edge':
+            this.handleEdgeRightClick(interaction);
+            break;
+        }
+      })
+    );
+  }
+  
+  /**
+   * Handle right-click on a network node
+   */
+  private handleNodeRightClick(interaction: any): void {
+    console.log(`Right-clicked node in layer ${interaction.layerIndex}, node ${interaction.nodeIndex}`);
+    // TODO: Add node-specific functionality here
+  }
+  
+  /**
+   * Handle right-click on a network edge
+   */
+  private handleEdgeRightClick(interaction: any): void {
+    console.log(`Right-clicked edge from layer ${interaction.layerIndex}, node ${interaction.sourceNodeIndex} to node ${interaction.targetNodeIndex}`);
+    console.log(`Edge weight: ${interaction.object.userData.weight}`);
+    // TODO: Add edge-specific functionality here
   }
 }
