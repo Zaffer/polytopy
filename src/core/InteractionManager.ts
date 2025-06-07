@@ -31,6 +31,9 @@ export class InteractionManager {
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
   
+  // Canvas element for cursor management
+  private canvasElement: HTMLCanvasElement | null = null;
+  
   // Observable streams for interactions
   private rightClickSubject = new Subject<InteractionData>();
   
@@ -43,6 +46,31 @@ export class InteractionManager {
   constructor(camera: THREE.Camera, scene: THREE.Scene) {
     this.camera = camera;
     this.scene = scene;
+  }
+  
+  /**
+   * Set the canvas element for cursor management
+   */
+  public setCanvasElement(canvas: HTMLCanvasElement): void {
+    this.canvasElement = canvas;
+  }
+  
+  /**
+   * Set cursor to crosshair for right-click interaction
+   */
+  public setCrosshairCursor(): void {
+    if (this.canvasElement) {
+      this.canvasElement.style.cursor = 'crosshair';
+    }
+  }
+  
+  /**
+   * Reset cursor to default
+   */
+  public setDefaultCursor(): void {
+    if (this.canvasElement) {
+      this.canvasElement.style.cursor = 'default';
+    }
   }
   
   /**
@@ -196,13 +224,18 @@ export class InteractionManager {
    */
   private applySelectionHighlight(object: THREE.Object3D): void {
     if (object instanceof THREE.Mesh) {
-      // For nodes only, use simple scaling
+      // For nodes, restore normal scale and just use material highlighting
       if (object.userData.type === InteractableType.NETWORK_NODE) {
         if (!this.originalNodeScales.has(object)) {
           this.originalNodeScales.set(object, object.scale.clone());
         }
-        const selectionScale = 1.08; // 8% larger for nodes
-        object.scale.setScalar(selectionScale);
+        // Reset to original scale for selection (normal size)
+        const originalScale = this.originalNodeScales.get(object);
+        if (originalScale) {
+          object.scale.copy(originalScale);
+        } else {
+          object.scale.set(1, 1, 1);
+        }
       }
       // For edges, NO scaling - just material change (they already scale with weights)
 

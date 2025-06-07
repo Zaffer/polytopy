@@ -5,7 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { VisualizationManager } from "../visualizations/VisualizationManager";
 import { PanelType, SceneConfig, DEFAULT_SCENE_CONFIG } from "../types/scene";
 import { PanelLabels } from "../components/PanelLabels";
-import { SelectionIndicator } from "../components/SelectionIndicator";
+
 import { InteractionManager } from "./InteractionManager";
 
 /**
@@ -22,7 +22,6 @@ export class SceneManager {
   // Application components
   private visualizationManager: VisualizationManager;
   private panelLabels: PanelLabels;
-  private selectionIndicator: SelectionIndicator;
   private interactionManager: InteractionManager;
   
   // Configuration
@@ -83,11 +82,11 @@ export class SceneManager {
     this.panelLabels = new PanelLabels();
     this.scene.add(this.panelLabels.getLabelGroup());
     
-    // Initialize selection indicator
-    this.selectionIndicator = new SelectionIndicator(this.scene, this.camera);
-    
     // Initialize interaction manager
     this.interactionManager = new InteractionManager(this.camera, this.scene);
+    
+    // Set the canvas element for cursor management
+    this.interactionManager.setCanvasElement(this.renderer.domElement);
     
     // Add mouse event listeners for selection indicator
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
@@ -124,7 +123,9 @@ export class SceneManager {
   private onMouseDown(event: MouseEvent): void {
     if (event.button === 2) { // Right mouse button
       this.isRightMouseDown = true;
-      this.selectionIndicator.showHoldIndicator(event.clientX, event.clientY);
+      
+      // Set crosshair cursor for right-click interaction
+      this.interactionManager.setCrosshairCursor();
       
       // Start hover detection during right-click hold
       this.interactionManager.handleRightClickHover(event.clientX, event.clientY);
@@ -136,8 +137,6 @@ export class SceneManager {
    */
   private onMouseMove(event: MouseEvent): void {
     if (this.isRightMouseDown) {
-      this.selectionIndicator.updateHoldIndicator(event.clientX, event.clientY);
-      
       // Update hover detection as mouse moves during right-click hold
       this.interactionManager.handleRightClickHover(event.clientX, event.clientY);
     }
@@ -150,11 +149,11 @@ export class SceneManager {
     if (event.button === 2 && this.isRightMouseDown) { // Right mouse button
       this.isRightMouseDown = false;
       
+      // Reset cursor to default
+      this.interactionManager.setDefaultCursor();
+      
       // Finalize the interaction - convert hover to selection
       this.interactionManager.handleRightClickRelease(event.clientX, event.clientY);
-      
-      // Show selection indicator animation
-      this.selectionIndicator.createIndicator(event.clientX, event.clientY);
     }
   }
 
@@ -164,6 +163,10 @@ export class SceneManager {
   private onMouseLeave(_event: MouseEvent): void {
     if (this.isRightMouseDown) {
       this.isRightMouseDown = false;
+      
+      // Reset cursor to default when leaving canvas
+      this.interactionManager.setDefaultCursor();
+      
       // Clear any hover state without finalizing selection
       this.interactionManager.clearRightClickHover();
     }
@@ -193,7 +196,6 @@ export class SceneManager {
   public dispose(): void {
     this.visualizationManager.dispose();
     this.panelLabels.dispose();
-    this.selectionIndicator.dispose();
     this.interactionManager.dispose();
     this.renderer.setAnimationLoop(null);
     window.removeEventListener("resize", this.onWindowResize.bind(this));
