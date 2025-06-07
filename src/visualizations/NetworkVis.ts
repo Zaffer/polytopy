@@ -15,24 +15,12 @@ export function createNeuralNetworkVisualization(
   // Use the actual network structure
   const { inputSize, hiddenSizes, outputSize } = networkStructure;
   
+  // Red to green color scheme for all layers
+  const lowActivationColor = new THREE.Color(0xff0000); // Red for low bias magnitude
+  const highActivationColor = new THREE.Color(0x00ff00); // Green for high bias magnitude
+
   // Define all layers of the network
   const layers = [inputSize, ...(Array.isArray(hiddenSizes) ? hiddenSizes : [hiddenSizes]), outputSize];
-  
-  // Green to red color scheme for all layers
-  const lowActivationColor = new THREE.Color(0x27ae60); // Green for low activation
-  const highActivationColor = new THREE.Color(0xe74c3c); // Red for high activation
-
-  // Get sample activations for dynamic node coloring (if network instance available)
-  let sampleActivations: number[][] = [];
-  if (networkInstance) {
-    try {
-      // Use a sample input (center of grid) to get current activations
-      const sampleInput = [0.5, 0.5];
-      sampleActivations = networkInstance.getActivations(sampleInput);
-    } catch (e) {
-      console.warn("Could not get sample activations:", e);
-    }
-  }
   
   // Draw all layers with enhanced node visualization
   layers.forEach((nodeCount, layerIndex) => {
@@ -54,39 +42,26 @@ export function createNeuralNetworkVisualization(
       const nodeIndex = i * skipFactor;
       if (nodeIndex >= nodeCount) continue;
       
-      // Green to red node visualization based on activation
+      // Node visualization based on bias magnitude
       let nodeColor = lowActivationColor.clone();
       let nodeSize = nodeRadius;
       
-      // Color based on activation if available
-      if (sampleActivations.length > 0) {
-        let activation = 0;
+      if (networkInstance && layerIndex > 0) { // Skip input layer (no bias)
+        const bias = networkInstance.getBias(layerIndex - 1, nodeIndex); // Adjust for 0-based bias indexing
         
-        if (layerIndex === 0) {
-          // Input layer - use a default moderate activation
-          activation = 0.5;
-        } else if (layerIndex === layers.length - 1) {
-          // Output layer - use output activation if available
-          if (sampleActivations.length > 0) {
-            const outputLayerIdx = sampleActivations.length - 1;
-            if (nodeIndex < sampleActivations[outputLayerIdx].length) {
-              activation = sampleActivations[outputLayerIdx][nodeIndex];
-            }
-          }
-        } else {
-          // Hidden layers
-          const activationLayerIdx = layerIndex - 1; // Adjust for input layer
-          if (activationLayerIdx < sampleActivations.length && nodeIndex < sampleActivations[activationLayerIdx].length) {
-            activation = sampleActivations[activationLayerIdx][nodeIndex];
-          }
-        }
+        // Normalize bias to [0, 1] range where:
+        // bias = -2 -> 0 (red, reluctant to fire)
+        // bias = 0 -> 0.5 (yellow, neutral)  
+        // bias = +2 -> 1 (green, eager to fire)
+        const normalizedBias = Math.max(0, Math.min(1, (bias + 2) / 4));
         
-        // Color interpolation from green (low) to red (high)
-        const intensity = Math.min(Math.max(activation, 0), 1); // Clamp to [0,1]
-        nodeColor = new THREE.Color().lerpColors(lowActivationColor, highActivationColor, intensity);
+        // Color based on actual bias value (not magnitude)
+        nodeColor = new THREE.Color().lerpColors(lowActivationColor, highActivationColor, normalizedBias);
         
-        // Node size based on activation (subtle effect)
-        nodeSize = nodeRadius * (0.7 + 0.3 * intensity);
+        // Node size based on bias magnitude for visual emphasis
+        const biasMagnitude = Math.abs(bias);
+        const normalizedMagnitude = Math.min(biasMagnitude / 2, 1);
+        nodeSize = nodeRadius * (0.5 + normalizedMagnitude);
       }
       
       const geometry = new THREE.SphereGeometry(nodeSize, 16, 16);

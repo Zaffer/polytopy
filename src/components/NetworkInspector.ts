@@ -235,8 +235,13 @@ export class NetworkInspector {
     if (!this.trainingManager || !this.currentSelection) return;
 
     const { layerIndex, nodeIndex } = this.currentSelection;
+    
+    // Skip input layer (no bias)
+    if (layerIndex === 0) return;
+    
     const network = this.trainingManager.getNeuralNetwork();
-    const currentBias = network.getBias(layerIndex!, nodeIndex!);
+    // Adjust layer index for bias array (input layer has no bias)
+    const currentBias = network.getBias(layerIndex! - 1, nodeIndex!);
 
     const fieldset = document.createElement('fieldset');
     const legend = document.createElement('legend');
@@ -463,9 +468,9 @@ export class NetworkInspector {
   private updateNodeBias(layerIndex: number, nodeIndex: number, newBias: number): void {
     if (!this.trainingManager) return;
     
-    // Update the network bias
+    // Update the network bias (adjust layer index for bias array)
     const network = this.trainingManager.getNeuralNetwork();
-    network.updateBias(layerIndex, nodeIndex, newBias);
+    network.updateBias(layerIndex - 1, nodeIndex, newBias);
     
     // Trigger NetworkVis regeneration (same approach as training)
     this.trainingManager.notifyManualWeightChange();
