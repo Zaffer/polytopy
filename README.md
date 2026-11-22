@@ -21,10 +21,13 @@
 ## Setup
 
    ```
-   npm install
-   npm start
+   bun install
+   bun start
    ```
  `http://localhost:3000`
+
+Live at https://zaffer.github.io/polytopy/, built and deployed by
+[.github/workflows/pages.yml](.github/workflows/pages.yml) on every push.
 
 ## Usage
 
